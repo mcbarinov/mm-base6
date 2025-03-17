@@ -1,0 +1,13 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+
+  <div>
+    <h3>update dconfig multiline / {{ key }}</h3>
+  </div>
+
+  <form method="post">
+    <textarea name="value" rows="10" cols="30">{{ dconfig[key] }}</textarea>
+    <input type="submit" value="update">
+  </form>
+
+{% endblock %}

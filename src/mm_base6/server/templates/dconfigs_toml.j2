@@ -1,0 +1,13 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+
+  <div>
+    <h3>update dconfig from toml</h3>
+  </div>
+
+  <form method="post">
+    <textarea name="value" rows="10" cols="30">{{ toml_str }}</textarea>
+    <input type="submit" value="update">
+  </form>
+
+{% endblock %}

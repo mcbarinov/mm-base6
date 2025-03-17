@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{ core_config.app_name }}</title>
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='%2348536b'/></svg>">
+  <link rel="stylesheet" href="/assets/pico.slate.min.css">
+  <link rel="stylesheet" href="/assets/base.css">
+  <style>
+    :root {
+      --pico-font-size: 110%;
+    }
+
+    .error-card {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 1rem;
+      border-radius: 0.25rem;
+      border: 1px solid #f5c6cb;
+    }
+
+    .success-card {
+      background-color: #CBFCE1;
+      color: #721c24;
+      padding: 1rem;
+      border-radius: 0.25rem;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+  <script src="/assets/sortable.min.js"></script>
+  <script src="/assets/base.js"></script>
+</head>
+<body class="container">
+
+<header>
+  <nav>
+    <ul>
+      <li><strong>{{ core_config.app_name }}</strong></li>
+      {% for path,title in server_config.main_menu.items() %}
+        <li><a href="{{ path }}">{{ title }}</a></li>
+      {% endfor %}
+      <li><a href="/system">system</a></li>
+      {% if not header_info_new_line %}
+        <li>
+          <div>{{ header_info() }}</div>
+        </li>
+      {% endif %}
+      <li><a href="/auth/logout">logout</a></li>
+    </ul>
+  </nav>
+  {% if header_info_new_line %}
+    <span>{{ header_info() }}</span>
+  {% endif %}
+</header>
+
+{% for message in flash_messages %}
+  <div class="{{ "flash-error" if message.error else "flash-message" }}">{{ message.message }}</div>
+{% endfor %}
+
+<main>
+  {% block content -%}
+  {%- endblock %}
+</main>
+
+<footer>
+  <hr>
+  app: v{{ app_version }} / mm_base6: v{{ mm_base6_version }} / server time: {{ utc_now() | dt }}
+</footer>
+
+</body>
+</html>

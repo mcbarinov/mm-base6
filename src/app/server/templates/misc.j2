@@ -1,0 +1,45 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+  <div>
+    <h3>mics</h3>
+  </div>
+
+  <div class="grid">
+    <section>
+      <b>response classes</b>
+      <ul>
+        <li><a href="/api/misc/result-ok">/api/misc/result-ok</a></li>
+        <li><a href="/api/misc/result-err">/api/misc/result-err</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <b>errors</b>
+      <ul>
+        <li><a href="/api/misc/user-error">/api/misc/user-error</a></li>
+        <li><a href="/api/misc/runtime-error">/api/misc/runtime-error</a></li>
+      </ul>
+    </section>
+  </div>
+
+
+  <hr>
+
+
+
+  <section>
+    <b>empty filter</b><br>
+    Zero: {{ zero | empty }}<br>
+  </section>
+
+  <hr>
+
+  <form method="POST" action="/api/misc/upload" enctype="multipart/form-data">
+    <fieldset role="group">
+      <input type="file" name="file">
+      <input type="submit" value="upload">
+    </fieldset>
+  </form>
+
+
+{% endblock %}

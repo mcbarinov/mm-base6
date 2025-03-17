@@ -1,0 +1,101 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+  <h3>system</h3>
+  <div class="grid">
+    <section>
+      <table>
+        <tr>
+          <td>openapi</td>
+          <td></td>
+          <td><a href="/system/openapi">view</a></td>
+        </tr>
+        <tr>
+          <td title="stands for Dynamic Config">dconfigs</td>
+          <td></td>
+          <td><a href="/system/dconfigs">view</a></td>
+        </tr>
+        <tr>
+          <td title="stands for Dynamic Value">dvalues</td>
+          <td></td>
+          <td><a href="/system/dvalues">view</a></td>
+        </tr>
+        <tr>
+          <td title="stands for Data Log">dlogs</td>
+          <td>{{ stats.system_log }}</td>
+          <td><a href="/system/dlogs">view</a></td>
+        </tr>
+        <tr>
+          <td>telegram</td>
+          <td>{{ has_telegram_settings | yes_no }}</td>
+          <td>
+            {% if has_telegram_settings %}
+              <a href="/api-post/system/send-test-telegram-message">send test message</a>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>logfile</td>
+          <td>{{ stats.logfile | filesizeformat }}</td>
+          <td>
+            <nav>
+              <ul>
+                <li><a href="/api/system/logfile">view</a></li>
+                <li><a href="/api-delete/system/logfile" {{ confirm }}>clean</a></li>
+              </ul>
+            </nav>
+          </td>
+        </tr>
+      </table>
+    </section>
+    <section>
+      <table>
+        <caption>db / {{ stats.db | length }}</caption>
+        {% for k,v in stats.db.items() %}
+          <tr>
+            <td>{{ k }}</td>
+            <td>{{ v }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br>
+
+      <table>
+        <caption>scheduler tasks / {{ stats.scheduler_tasks | length }}</caption>
+        <tr>
+          <th>task_id</th>
+          <th>interval</th>
+          <th>last_run</th>
+          <th>run_count</th>
+          <th>running</th>
+        </tr>
+        {% for t in stats.scheduler_tasks %}
+          <tr>
+            <td>{{ t.task_id }}</td>
+            <td>{{ t.interval }}</td>
+            <td>{{ t.last_run | dt }}</td>
+            <td>{{ t.run_count }}</td>
+            <td>{{ t.running | yes_no }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br>
+
+      <table>
+        <caption>threads / {{ stats.threads | length }}</caption>
+        <tr>
+          <th>name</th>
+          <th>daemon</th>
+          <th>func</th>
+        </tr>
+        {% for t in stats.threads %}
+          <tr>
+            <td>{{ t.name }}</td>
+            <td>{{ t.daemon | yes_no }}</td>
+            <td>{{ t.func_name | empty }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </section>
+  </div>
+
+{% endblock %}

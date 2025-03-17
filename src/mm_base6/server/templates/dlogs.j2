@@ -1,0 +1,52 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+  <h3>dlogs</h3>
+
+
+  <div class="grid">
+    <form method="GET">
+      <fieldset role="group">
+        <select name="category">
+          <option value="">category...</option>
+          {% for category in category_stats %}
+            <option value="{{ category }}" {{ "selected" if category==form.category }}>{{ category }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" placeholder="limit" name="limit" value="{{ form.limit }}">
+        <input type="submit" value="filter" class="outline">
+      </fieldset>
+    </form>
+    <div>
+      <details>
+        <summary role="button" class="outline">delete</summary>
+        <ul>
+          {% for category, count in category_stats.items() %}
+            <li>{{ category }} / {{ count }} / <a href="/api-delete/system/dlogs/category/{{ category }}" {{ confirm }}>delete</a></li>
+          {% endfor %}
+
+
+        </ul>
+        <p>all dlogs / {{ all_count }} / <a href="/api-delete/system/dlogs" {{ confirm }}>delete</a></p>
+      </details>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <th>created_at</th>
+      <th>category</th>
+      <th>data</th>
+      <th>delete</th>
+      <th>view</th>
+    </tr>
+    {% for l in dlogs %}
+      <tr>
+        <td>{{ l.created_at | dt }}</td>
+        <td>{{ l.category }}</td>
+        <td>{{ l.data | system_log_data_truncate }}</td>
+        <td><a href="/api-delete/system/dlogs/{{ l.id }}">delete</a></td>
+        <td><a href="/api/system/dlogs/{{ l.id }}">view</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
