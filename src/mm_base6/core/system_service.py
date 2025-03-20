@@ -144,7 +144,7 @@ class SystemService:
             self.logger.error("send_telegram_message error: %s", res.err)
         return res
 
-    def has_proxy_settings(self) -> bool:
+    def has_proxies_settings(self) -> bool:
         return (
             "proxies_url" in DConfigStorage.storage
             and "proxies" in DValueStorage.storage

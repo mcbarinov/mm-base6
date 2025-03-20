@@ -15,7 +15,11 @@ async def main() -> None:
 
     config = uvicorn.Config(fastapi_app, host="0.0.0.0", port=3000, log_level="warning")  # noqa: S104 # nosec
     server = uvicorn.Server(config)
-    await server.serve()
+
+    try:
+        await server.serve()
+    except Exception as e:
+        print(str(e))
 
 
 if __name__ == "__main__":

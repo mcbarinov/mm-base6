@@ -65,7 +65,7 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         inst.dconfig = await DConfigStorage.init_storage(inst.db.dconfig, dconfig_settings, inst.dlog)
         inst.dvalue = await DValueStorage.init_storage(inst.db.dvalue, dvalue_settings)
 
-        if inst.system_service.has_proxy_settings():
+        if inst.system_service.has_proxies_settings():
             inst.scheduler.add_task("system_update_proxies", 60, inst.system_service.update_proxies)
 
         return inst

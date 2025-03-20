@@ -13,8 +13,12 @@ router: APIRouter = APIRouter(prefix="/system", include_in_schema=False)
 @router.get("/")
 async def system_page(render: RenderDep, core: BaseCoreDep) -> HTMLResponse:
     has_telegram_settings = core.system_service.has_telegram_settings()
+    has_proxies_settings = core.system_service.has_proxies_settings()
     return await render.html(
-        "system.j2", stats=await core.system_service.get_stats(), has_telegram_settings=has_telegram_settings
+        "system.j2",
+        stats=await core.system_service.get_stats(),
+        has_telegram_settings=has_telegram_settings,
+        has_proxies_settings=has_proxies_settings,
     )
 
 
