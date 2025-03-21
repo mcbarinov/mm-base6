@@ -1,4 +1,4 @@
-import anyio
+import uvloop
 
 from app import settings
 from app.core.core import Core
@@ -15,4 +15,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    anyio.run(main)
+    uvloop.run(main())

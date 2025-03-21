@@ -25,3 +25,7 @@ class MiscService(AppService):
     def increment_counter(self) -> int:
         self.counter.increment()
         return self.counter.get()
+
+    async def update_dvalue(self) -> int:
+        self.dvalue.processed_block = self.dvalue.processed_block + 1
+        return self.dvalue.processed_block

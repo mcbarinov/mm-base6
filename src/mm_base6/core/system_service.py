@@ -9,7 +9,7 @@ import anyio
 import mm_telegram
 import pydash
 from bson import ObjectId
-from mm_std import AsyncScheduler, Err, Result, ahr, synchronized, toml_dumps, toml_loads, utc_now
+from mm_std import AsyncScheduler, Err, Result, hra, synchronized, toml_dumps, toml_loads, utc_now
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig
@@ -155,7 +155,7 @@ class SystemService:
     @synchronized
     async def update_proxies(self) -> int | None:
         proxies_url = cast(str, DConfigStorage.storage.get("proxies_url"))
-        res = await ahr(proxies_url)
+        res = await hra(proxies_url)
         if res.is_error():
             await self.dlog("update_proxies", {"error": res.error})
             return -1
