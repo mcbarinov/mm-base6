@@ -46,7 +46,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "mm-base6", specifier = "==0.0.2" }]
+requires-dist = [{ name = "mm-base6", specifier = "==0.0.3" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -518,7 +518,7 @@ wheels = [
 
 [[package]]
 name = "mm-base6"
-version = "0.0.2"
+version = "0.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
@@ -528,7 +528,7 @@ dependencies = [
     { name = "mm-telegram" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/1a/4702d908756cd8358e9d35e24fa2cd2e0307c2f8af2a9437f9b780ce06a9/mm_base6-0.0.2-py3-none-any.whl", hash = "sha256:8c44d4b8d5d80adaa532342a4026bf4b76b1b42e11c5131de6eb5d465ae46947", size = 41393 },
+    { url = "https://files.pythonhosted.org/packages/60/58/b055e99a72f07558f41ef30c7e0095ea16e530d44d10d3dbc821fb6b8d60/mm_base6-0.0.3-py3-none-any.whl", hash = "sha256:a9b7ed1c46b94b8e227f6645fcfe8cf8aabaed126ac85737c31a87132fba4d36", size = 41521 },
 ]
 
 [[package]]
