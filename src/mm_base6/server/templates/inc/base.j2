@@ -68,7 +68,8 @@
 
 <footer>
   <hr>
-  app: v{{ app_version }} / mm_base6: v{{ mm_base6_version }} / server time: {{ utc_now() | dt }}
+  app: v{{ app_version }} / mm_base6: v{{ mm_base6_version }} / server time: {{ utc_now() | dt }}<br>
+  {{ footer_info() }}
 </footer>
 
 </body>

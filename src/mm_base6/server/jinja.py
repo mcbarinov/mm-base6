@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import Any
@@ -26,18 +26,22 @@ def system_log_data_truncate(data: object) -> str:
 
 @dataclass
 class CustomJinja:
-    header_info: Callable[..., Markup] | None = None
+    header_info: Callable[..., Awaitable[Markup]] | None = None
     header_info_new_line: bool = False
-    footer_info: Callable[..., Markup] | None = None
+    footer_info: Callable[..., Awaitable[Markup]] | None = None
     filters: dict[str, Callable[..., Any]] | None = None
     globals: dict[str, Any] | None = None
+
+
+async def empty_markup(_: object) -> Markup:
+    return Markup("")
 
 
 def init_env(core: BaseCoreAny, server_config: ServerConfig, custom_jinja: CustomJinja) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 
-    header_info = custom_jinja.header_info if custom_jinja.header_info else lambda _: Markup("")
-    footer_info = custom_jinja.footer_info if custom_jinja.footer_info else lambda _: Markup("")
+    header_info = custom_jinja.header_info if custom_jinja.header_info else empty_markup
+    footer_info = custom_jinja.footer_info if custom_jinja.footer_info else empty_markup
     custom_filters: dict[str, Callable[..., Any]] = {
         "system_log_data_truncate": system_log_data_truncate,
     }
