@@ -46,3 +46,8 @@ async def upload(file: Annotated[UploadFile, File()]) -> dict[str, str]:
     content = await file.read()
     text_content = content.decode("utf-8")
     return {"text_content": text_content}
+
+
+@router.post("/update-dvalue")
+async def update_dvalue(core: CoreDep) -> int:
+    return await core.misc_service.update_dvalue()
