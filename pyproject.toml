@@ -1,12 +1,12 @@
 [project]
 name = "mm-base6"
-version = "0.0.4"
+version = "0.0.5"
 description = ""
 requires-python = ">=3.12"
 dependencies = [
-    "mm-mongo>=0.4.2",
+    "mm-mongo>=0.4.3",
     "mm-jinja~=0.0.5",
-    "mm-telegram~=0.0.6",
+    "mm-telegram~=0.0.7",
     "fastapi[standard]>=0.115.11",
     "itsdangerous~=2.2.0",
 ]
@@ -20,7 +20,7 @@ dev-dependencies = [
     "pytest~=8.3.5",
     "pytest-xdist~=3.6.1",
     "pytest-httpserver~=1.1.2",
-    "ruff~=0.11.1",
+    "ruff~=0.11.2",
     "pip-audit~=2.8.0",
     "bandit~=1.8.3",
     "mypy~=1.15.0",

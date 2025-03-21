@@ -66,45 +66,50 @@
           </tr>
         {% endfor %}
       </table>
-      <br>
 
-      <table>
-        <caption>scheduler tasks / {{ stats.scheduler_tasks | length }}</caption>
-        <tr>
-          <th>task_id</th>
-          <th>interval</th>
-          <th>last_run</th>
-          <th>run_count</th>
-          <th>running</th>
-        </tr>
-        {% for t in stats.scheduler_tasks %}
-          <tr>
-            <td>{{ t.task_id }}</td>
-            <td>{{ t.interval }}</td>
-            <td>{{ t.last_run | dt }}</td>
-            <td>{{ t.run_count }}</td>
-            <td>{{ t.running | yes_no }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-      <br>
-
-      <table>
-        <caption>threads / {{ stats.threads | length }}</caption>
-        <tr>
-          <th>name</th>
-          <th>daemon</th>
-          <th>func</th>
-        </tr>
-        {% for t in stats.threads %}
-          <tr>
-            <td>{{ t.name }}</td>
-            <td>{{ t.daemon | yes_no }}</td>
-            <td>{{ t.func_name | empty }}</td>
-          </tr>
-        {% endfor %}
-      </table>
     </section>
   </div>
+
+  <section>
+    <h5>scheduler tasks / {{ stats.scheduler_tasks | length }}</h5>
+    <table>
+      <tr>
+        <th>task_id</th>
+        <th>interval</th>
+        <th>last_run</th>
+        <th>run_count</th>
+        <th>error_count</th>
+        <th>running</th>
+      </tr>
+      {% for t in stats.scheduler_tasks %}
+        <tr>
+          <td>{{ t.task_id }}</td>
+          <td>{{ t.interval }}</td>
+          <td>{{ t.last_run | dt }}</td>
+          <td>{{ t.run_count }}</td>
+          <td>{{ t.error_count }}</td>
+          <td>{{ t.running | yes_no }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section><br>
+
+  <section>
+    <h5>threads / {{ stats.threads | length }}</h5>
+    <table>
+      <tr>
+        <th>name</th>
+        <th>daemon</th>
+        <th>func</th>
+      </tr>
+      {% for t in stats.threads %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td>{{ t.daemon | yes_no }}</td>
+          <td>{{ t.func_name | empty }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section>
 
 {% endblock %}

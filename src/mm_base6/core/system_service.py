@@ -29,6 +29,7 @@ class Stats(BaseModel):
         task_id: str
         interval: float
         run_count: int
+        error_count: int
         last_run: datetime | None
         running: bool
 
@@ -188,6 +189,7 @@ class SystemService:
                     task_id=task_id,
                     interval=task.interval,
                     run_count=task.run_count,
+                    error_count=task.error_count,
                     last_run=task.last_run,
                     running=task.running,
                 )
