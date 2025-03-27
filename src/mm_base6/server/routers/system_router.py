@@ -36,7 +36,7 @@ async def stop_scheduler(core: BaseCoreDep) -> None:
 
 @router.post("/scheduler/reinit")
 async def reinit_scheduler(core: BaseCoreDep) -> None:
-    core.reinit_scheduler()
+    await core.reinit_scheduler()
 
 
 @router.post("/update-proxies")

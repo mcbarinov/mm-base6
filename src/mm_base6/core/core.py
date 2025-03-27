@@ -73,19 +73,19 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         return inst
 
     @synchronized
-    def reinit_scheduler(self) -> None:
+    async def reinit_scheduler(self) -> None:
         self.logger.debug("Reinitializing scheduler...")
         if self.scheduler.is_running():
             self.scheduler.stop()
         self.scheduler.clear_tasks()
         if self.system_service.has_proxies_settings():
             self.scheduler.add_task("system_update_proxies", 60, self.system_service.update_proxies)
-        self.configure_scheduler()
+        await self.configure_scheduler()
         self.scheduler.start()
 
     async def startup(self) -> None:
         await self.start()
-        self.reinit_scheduler()
+        await self.reinit_scheduler()
         self.logger.debug("app started")
         if not self.core_config.debug:
             await self.dlog("app_start")
@@ -116,12 +116,15 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
             send_telegram_message=self.system_service.send_telegram_message,
         )
 
-    def configure_scheduler(self) -> None:
+    @abstractmethod
+    async def configure_scheduler(self) -> None:
         pass
 
+    @abstractmethod
     async def start(self) -> None:
         pass
 
+    @abstractmethod
     async def stop(self) -> None:
         pass
 

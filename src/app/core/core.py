@@ -18,5 +18,11 @@ class Core(BaseCore[DConfigSettings, DValueSettings, Db]):
         res.misc_service = MiscService(res.base_service_params)
         return res
 
-    def configure_scheduler(self) -> None:
+    async def configure_scheduler(self) -> None:
         self.scheduler.add_task("generate_one", 60, self.data_service.generate_one)
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
