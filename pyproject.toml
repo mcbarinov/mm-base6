@@ -1,6 +1,6 @@
 [project]
 name = "mm-base6"
-version = "0.0.8"
+version = "0.0.9"
 description = ""
 requires-python = ">=3.12"
 dependencies = [
@@ -9,8 +9,9 @@ dependencies = [
     "mm-telegram~=0.0.8",
     "fastapi[standard]>=0.115.12",
     "itsdangerous~=2.2.0",
-    "uvloop>=0.21.0",
-    "psutil>=7.0.0",
+    "uvloop~=0.21.0",
+    "psutil~=7.0.0",
+    "mm-std~=0.3.18",
 ]
 
 [build-system]
@@ -68,6 +69,7 @@ ignore = [
     "RET503", # flake8-return: implicit-return
     "RUF012", # ruff: mutable-class-default
     "COM812", # it's used in ruff formatter
+    "G004",
     # "T201", # DELETE ME!
 ]
 [tool.ruff.lint.flake8-builtins]

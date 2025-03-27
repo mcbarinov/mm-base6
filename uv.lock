@@ -609,13 +609,14 @@ wheels = [
 
 [[package]]
 name = "mm-base6"
-version = "0.0.7"
+version = "0.0.9"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "itsdangerous" },
     { name = "mm-jinja" },
     { name = "mm-mongo" },
+    { name = "mm-std" },
     { name = "mm-telegram" },
     { name = "psutil" },
     { name = "uvloop" },
@@ -640,9 +641,10 @@ requires-dist = [
     { name = "itsdangerous", specifier = "~=2.2.0" },
     { name = "mm-jinja", specifier = "~=0.0.5" },
     { name = "mm-mongo", specifier = ">=0.4.4" },
+    { name = "mm-std", specifier = "~=0.3.18" },
     { name = "mm-telegram", specifier = "~=0.0.8" },
-    { name = "psutil", specifier = ">=7.0.0" },
-    { name = "uvloop", specifier = ">=0.21.0" },
+    { name = "psutil", specifier = "~=7.0.0" },
+    { name = "uvloop", specifier = "~=0.21.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -683,7 +685,7 @@ wheels = [
 
 [[package]]
 name = "mm-std"
-version = "0.3.17"
+version = "0.3.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -698,7 +700,7 @@ dependencies = [
     { name = "tomlkit" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/29/0bcb0ec74ef8c08a4550c525f8eaae379058da78828a3b99714b4306eb6e/mm_std-0.3.17-py3-none-any.whl", hash = "sha256:7fed6ce091a7a7f3e629737553bfae759060abd57bc8ad8de91167f519d003d6", size = 20936 },
+    { url = "https://files.pythonhosted.org/packages/8d/cd/bd49c72f3cad078e1bc0a5acda417f69620650325433470f0738e16eee04/mm_std-0.3.18-py3-none-any.whl", hash = "sha256:d113862da5317839d6b4407322bfaf9af73bbc2b647696ea6513a75cbf8430cf", size = 21545 },
 ]
 
 [[package]]

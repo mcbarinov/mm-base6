@@ -24,6 +24,21 @@ async def clean_logfile(core: BaseCoreDep) -> None:
     await core.system_service.clean_logfile()
 
 
+@router.post("/scheduler/start")
+async def start_scheduler(core: BaseCoreDep) -> None:
+    core.scheduler.start()
+
+
+@router.post("/scheduler/stop")
+async def stop_scheduler(core: BaseCoreDep) -> None:
+    core.scheduler.stop()
+
+
+@router.post("/scheduler/reinit")
+async def reinit_scheduler(core: BaseCoreDep) -> None:
+    core.reinit_scheduler()
+
+
 @router.post("/update-proxies")
 async def update_proxies(core: BaseCoreDep) -> int | None:
     return await core.system_service.update_proxies()

@@ -43,6 +43,22 @@
           </tr>
         {% endif %}
         <tr>
+          <td>scheduler</td>
+          <td>
+            {{ "running" if stats.scheduler.running else "not running" }} /
+            {{ stats.scheduler.tasks | length }}
+          </td>
+          <td>
+            <nav>
+              <ul>
+                <li><a href="/api-post/system/scheduler/start">start</a></li>
+                <li><a href="/api-post/system/scheduler/stop">stop</a></li>
+                <li><a href="/api-post/system/scheduler/reinit">re-init</a></li>
+              </ul>
+            </nav>
+          </td>
+        </tr>
+        <tr>
           <td>system stats</td>
           <td></td>
           <td><a href="/api/system/stats">view</a></td>
@@ -76,7 +92,7 @@
   </div>
 
   <section>
-    <h5>scheduler tasks / {{ stats.scheduler_tasks | length }}</h5>
+    <h5>scheduler tasks / {{ stats.scheduler.tasks | length }}</h5>
     <table>
       <tr>
         <th>task_id</th>
@@ -86,7 +102,7 @@
         <th>error_count</th>
         <th>running</th>
       </tr>
-      {% for t in stats.scheduler_tasks %}
+      {% for t in stats.scheduler.tasks %}
         <tr>
           <td>{{ t.task_id }}</td>
           <td>{{ t.interval }}</td>

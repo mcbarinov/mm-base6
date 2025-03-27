@@ -1,4 +1,4 @@
-from __future__ import annotations
+from typing import Self
 
 from app.core.db import Db
 from app.core.services.data_service import DataService
@@ -12,9 +12,11 @@ class Core(BaseCore[DConfigSettings, DValueSettings, Db]):
     misc_service: MiscService
 
     @classmethod
-    async def init(cls, core_config: CoreConfig) -> Core:
+    async def init(cls, core_config: CoreConfig) -> Self:
         res = await super().base_init(core_config, DConfigSettings, DValueSettings, Db)
         res.data_service = DataService(res.base_service_params)
         res.misc_service = MiscService(res.base_service_params)
-        res.scheduler.add_task("data_service:generate_one", 60, res.data_service.generate_one)
         return res
+
+    def configure_scheduler(self) -> None:
+        self.scheduler.add_task("generate_one", 60, self.data_service.generate_one)

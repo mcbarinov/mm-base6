@@ -9,7 +9,7 @@ from typing import Any, Generic, Self, TypeVar
 
 from bson import ObjectId
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
-from mm_std import AsyncScheduler, Err, Ok, init_logger
+from mm_std import AsyncScheduler, Err, Ok, init_logger, synchronized
 from pymongo import AsyncMongoClient
 
 from mm_base6.core.config import CoreConfig
@@ -70,14 +70,22 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         inst.dconfig = await DConfigStorage.init_storage(inst.db.dconfig, dconfig_settings, inst.dlog)
         inst.dvalue = await DValueStorage.init_storage(inst.db.dvalue, dvalue_settings)
 
-        if inst.system_service.has_proxies_settings():
-            inst.scheduler.add_task("system_update_proxies", 60, inst.system_service.update_proxies)
-
         return inst
 
-    async def startup(self) -> None:
+    @synchronized
+    def reinit_scheduler(self) -> None:
+        self.logger.debug("Reinitializing scheduler...")
+        if self.scheduler.is_running():
+            self.scheduler.stop()
+        self.scheduler.clear_tasks()
+        if self.system_service.has_proxies_settings():
+            self.scheduler.add_task("system_update_proxies", 60, self.system_service.update_proxies)
+        self.configure_scheduler()
         self.scheduler.start()
+
+    async def startup(self) -> None:
         await self.start()
+        self.reinit_scheduler()
         self.logger.debug("app started")
         if not self.core_config.debug:
             await self.dlog("app_start")
@@ -107,6 +115,9 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
             dlog=self.dlog,
             send_telegram_message=self.system_service.send_telegram_message,
         )
+
+    def configure_scheduler(self) -> None:
+        pass
 
     async def start(self) -> None:
         pass

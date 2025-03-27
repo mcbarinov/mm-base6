@@ -29,13 +29,17 @@ class Stats(BaseModel):
         daemon: bool
         func_name: str | None
 
-    class SchedulerTask(BaseModel):
-        task_id: str
-        interval: float
-        run_count: int
-        error_count: int
-        last_run: datetime | None
+    class Scheduler(BaseModel):
+        class Task(BaseModel):
+            task_id: str
+            interval: float
+            run_count: int
+            error_count: int
+            last_run: datetime | None
+            running: bool
+
         running: bool
+        tasks: list[Task]
 
     class AsyncTask(BaseModel):
         name: str
@@ -53,7 +57,7 @@ class Stats(BaseModel):
     logfile: int  # size in bytes
     system_log: int  # count
     threads: list[ThreadInfo]
-    scheduler_tasks: list[SchedulerTask]
+    scheduler: Scheduler
     async_tasks: list[AsyncTask]
 
 
@@ -199,10 +203,10 @@ class SystemService:
             db_stats[col] = await self.db.database[col].estimated_document_count()
 
         # AsyncScheduler
-        scheduler_tasks: list[Stats.SchedulerTask] = []
+        scheduler_tasks: list[Stats.Scheduler.Task] = []
         for task_id, task in self.scheduler.tasks.items():
             scheduler_tasks.append(
-                Stats.SchedulerTask(
+                Stats.Scheduler.Task(
                     task_id=task_id,
                     interval=task.interval,
                     run_count=task.run_count,
@@ -211,6 +215,7 @@ class SystemService:
                     running=task.running,
                 )
             )
+        scheduler = Stats.Scheduler(running=self.scheduler.is_running(), tasks=scheduler_tasks)
 
         async_tasks: list[Stats.AsyncTask] = []
         for async_task in asyncio.all_tasks():
@@ -225,7 +230,7 @@ class SystemService:
             logfile=(await self.logfile.stat()).st_size,
             system_log=await self.db.dlog.count({}),
             threads=threads,
-            scheduler_tasks=scheduler_tasks,
+            scheduler=scheduler,
             async_tasks=async_tasks,
         )
 
