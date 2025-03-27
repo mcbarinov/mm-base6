@@ -2,15 +2,16 @@ from fastapi import APIRouter
 from mm_std import Result
 from starlette.responses import PlainTextResponse
 
-from mm_base6.core.system_service import Stats
 from mm_base6.server.deps import BaseCoreDep
 
 router: APIRouter = APIRouter(prefix="/api/system", tags=["system"])
 
 
 @router.get("/stats")
-async def get_stats(core: BaseCoreDep) -> Stats:
-    return await core.system_service.get_stats
+async def get_stats(core: BaseCoreDep) -> dict[str, object]:
+    psutil_stats = await core.system_service.get_psutil_stats()
+    stats = await core.system_service.get_stats()
+    return psutil_stats | stats.model_dump()
 
 
 @router.get("/logfile", response_class=PlainTextResponse)

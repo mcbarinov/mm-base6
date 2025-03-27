@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import platform
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import Logger
 from typing import Literal, cast
 
 import anyio
 import mm_telegram
+import psutil
 import pydash
 from bson import ObjectId
 from mm_std import AsyncScheduler, Err, Result, hra, synchronized, toml_dumps, toml_loads, utc_now
@@ -180,7 +182,6 @@ class SystemService:
         await DValueStorage.update_value("proxies_updated_at", utc_now())
         return len(proxies)
 
-    @property
     async def get_stats(self) -> Stats:
         # threads
         threads = []
@@ -227,6 +228,76 @@ class SystemService:
             scheduler_tasks=scheduler_tasks,
             async_tasks=async_tasks,
         )
+
+    async def get_psutil_stats(self) -> dict[str, object]:
+        def format_bytes(num_bytes: int) -> str:
+            """Convert bytes to a human-readable string."""
+            for unit in ["B", "KB", "MB", "GB", "TB"]:
+                if num_bytes < 1024.0:
+                    return f"{num_bytes:.2f} {unit}"
+                num_bytes /= 1024.0  # type: ignore[assignment]
+            return f"{num_bytes:.2f} PB"
+
+        def format_duration(seconds: float) -> str:
+            """Convert seconds to a human-readable duration string."""
+            return str(timedelta(seconds=int(seconds)))
+
+        def psutils_stats() -> dict[str, object]:
+            # CPU Information
+            cpu_count = psutil.cpu_count(logical=True)
+            # Measure CPU usage over an interval of 10 second for an average value
+            cpu_percent = psutil.cpu_percent(interval=10)
+            cpu_freq = psutil.cpu_freq()
+            cpu_freq_current = f"{cpu_freq.current:.2f} MHz" if cpu_freq else "N/A"
+
+            # Memory Information
+            virtual_mem = psutil.virtual_memory()
+            total_memory = format_bytes(virtual_mem.total)
+            used_memory = format_bytes(virtual_mem.used)
+            available_memory = format_bytes(virtual_mem.available)
+            memory_percent = f"{virtual_mem.percent}%"
+
+            # Disk Usage Information (using root partition as an example)
+            disk_usage = psutil.disk_usage("/")
+            total_disk = format_bytes(disk_usage.total)
+            used_disk = format_bytes(disk_usage.used)
+            free_disk = format_bytes(disk_usage.free)
+            disk_percent = f"{disk_usage.percent}%"
+
+            # System Uptime (since boot)
+            boot_time = psutil.boot_time()
+            uptime_seconds = time.time() - boot_time
+            uptime = format_duration(uptime_seconds)
+
+            # System Platform Information
+            system_info = {
+                "platform": platform.system(),
+                "platform_release": platform.release(),
+                "platform_version": platform.version(),
+                "architecture": platform.machine(),
+                "hostname": platform.node(),
+                "processor": platform.processor(),
+            }
+
+            return {
+                "system": system_info,
+                "uptime": uptime,
+                "cpu": {
+                    "cpu_count": cpu_count,
+                    "cpu_usage": f"{cpu_percent}%",
+                    "cpu_frequency": cpu_freq_current,
+                },
+                "memory": {
+                    "total": total_memory,
+                    "used": used_memory,
+                    "available": available_memory,
+                    "usage_percent": memory_percent,
+                },
+                "disk": {"total": total_disk, "used": used_disk, "free": free_disk, "usage_percent": disk_percent},
+                "time": {"local": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "utc": utc_now()},
+            }
+
+        return await asyncio.to_thread(psutils_stats)
 
     async def read_logfile(self) -> str:
         return await self.logfile.read_text(encoding="utf-8")
