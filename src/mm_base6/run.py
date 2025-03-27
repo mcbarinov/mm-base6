@@ -10,7 +10,7 @@ from fastapi import APIRouter
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.core import BaseCore
 from mm_base6.server.config import ServerConfig
-from mm_base6.server.jinja import CustomJinja
+from mm_base6.server.jinja import JinjaConfig
 from mm_base6.server.server import init_server
 from mm_base6.server.uvicorn import serve_uvicorn
 
@@ -21,9 +21,9 @@ def run(
     *,
     core_config: CoreConfig,
     server_config: ServerConfig,
+    jinja_config: JinjaConfig,
     core_class: type[Core],
     router: APIRouter,
-    custom_jinja: CustomJinja,
     host: str,
     port: int,
     uvicorn_log_level: str,
@@ -34,7 +34,7 @@ def run(
             server_config=server_config,
             core_class=core_class,
             router=router,
-            custom_jinja=custom_jinja,
+            jinja_config=jinja_config,
             host=host,
             port=port,
             uvicorn_log_level=uvicorn_log_level,
@@ -46,9 +46,9 @@ async def _main(
     *,
     core_config: CoreConfig,
     server_config: ServerConfig,
+    jinja_config: JinjaConfig,
     core_class: type[Core],
     router: APIRouter,
-    custom_jinja: CustomJinja,
     host: str,
     port: int,
     uvicorn_log_level: str,
@@ -57,7 +57,7 @@ async def _main(
     loop.set_task_factory(_custom_task_factory)
     core = await core_class.init(core_config)
     await core.startup()
-    fastapi_app = init_server(core, server_config, custom_jinja, router)
+    fastapi_app = init_server(core, server_config, jinja_config, router)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 
 

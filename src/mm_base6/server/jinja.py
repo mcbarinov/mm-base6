@@ -25,7 +25,7 @@ def system_log_data_truncate(data: object) -> str:
 
 
 @dataclass
-class CustomJinja:
+class JinjaConfig:
     header_info: Callable[..., Awaitable[Markup]] | None = None
     header_info_new_line: bool = False
     footer_info: Callable[..., Awaitable[Markup]] | None = None
@@ -37,11 +37,11 @@ async def empty_markup(_: object) -> Markup:
     return Markup("")
 
 
-def init_env(core: BaseCoreAny, server_config: ServerConfig, custom_jinja: CustomJinja) -> Environment:
+def init_env(core: BaseCoreAny, server_config: ServerConfig, jinja_config: JinjaConfig) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 
-    header_info = custom_jinja.header_info if custom_jinja.header_info else empty_markup
-    footer_info = custom_jinja.footer_info if custom_jinja.footer_info else empty_markup
+    header_info = jinja_config.header_info if jinja_config.header_info else empty_markup
+    footer_info = jinja_config.footer_info if jinja_config.footer_info else empty_markup
     custom_filters: dict[str, Callable[..., Any]] = {
         "system_log_data_truncate": system_log_data_truncate,
     }
@@ -53,15 +53,15 @@ def init_env(core: BaseCoreAny, server_config: ServerConfig, custom_jinja: Custo
         "confirm": Markup(""" onclick="return confirm('sure?')" """),
         "header_info": partial(header_info, core),
         "footer_info": partial(footer_info, core),
-        "header_info_new_line": custom_jinja.header_info_new_line,
+        "header_info_new_line": jinja_config.header_info_new_line,
         "app_version": utils.get_package_version("app"),
         "mm_base6_version": utils.get_package_version("mm_base6"),
     }
 
-    if custom_jinja.globals:
-        custom_globals |= custom_jinja.globals
-    if custom_jinja.filters:
-        custom_filters |= custom_jinja.filters
+    if jinja_config.globals:
+        custom_globals |= jinja_config.globals
+    if jinja_config.filters:
+        custom_filters |= jinja_config.filters
 
     return mm_jinja.init_jinja(loader, custom_globals=custom_globals, custom_filters=custom_filters, enable_async=True)
 

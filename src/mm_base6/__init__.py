@@ -11,9 +11,9 @@ from .core.dvalue import DValueModel as DValueModel
 from .core.errors import UserError as UserError
 from .server.config import ServerConfig as ServerConfig
 from .server.deps import RenderDep as RenderDep
-from .server.jinja import CustomJinja as CustomJinja
+from .server.jinja import JinjaConfig as JinjaConfig
 from .server.utils import redirect as redirect
 
-# must be last
+# must be last due to circular imports
 # isort: split
 from .run import run as run

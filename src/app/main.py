@@ -8,7 +8,7 @@ run(
     server_config=settings.server_config,
     core_class=Core,
     router=settings.get_router(),
-    custom_jinja=jinja.custom_jinja,
+    jinja_config=jinja.jinja_config,
     host="0.0.0.0",  # noqa: S104 # nosec
     port=3000,
     uvicorn_log_level="warning",

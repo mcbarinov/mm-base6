@@ -20,17 +20,17 @@ from mm_base6.core.core import BaseCore, DB_co, DCONFIG_co, DVALUE_co
 from mm_base6.core.errors import UserError
 from mm_base6.server import utils
 from mm_base6.server.auth import AccessTokenMiddleware
-from mm_base6.server.jinja import CustomJinja, init_env
+from mm_base6.server.jinja import JinjaConfig, init_env
 from mm_base6.server.routers import base_router
 
 
 def init_server(
     core: BaseCore[DCONFIG_co, DVALUE_co, DB_co],
     server_config: ServerConfig,
-    custom_jinja: CustomJinja,
+    jinja_config: JinjaConfig,
     router: APIRouter,
 ) -> FastAPI:
-    jinja_env = init_env(core, server_config, custom_jinja)
+    jinja_env = init_env(core, server_config, jinja_config)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=configure_lifespan(core))
 
     configure_state(app, core, server_config, jinja_env)
