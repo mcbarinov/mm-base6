@@ -95,6 +95,28 @@
   </section><br>
 
   <section>
+    <h5>async tasks / {{ stats.async_tasks | length }}</h5>
+    <table class="sortable">
+      <thead>
+      <tr>
+        <th>name</th>
+        <th>core</th>
+        <th>status</th>
+        <th>running time, seconds</th>
+      </tr>
+      </thead>
+      {% for t in stats.async_tasks %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td>{{ t.coro }}</td>
+          <td>{{ t.status }}</td>
+          <td> {% if t.running_time %}{{ t.running_time | round(2) }}{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section><br>
+
+  <section>
     <h5>threads / {{ stats.threads | length }}</h5>
     <table>
       <tr>

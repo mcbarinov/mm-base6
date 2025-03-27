@@ -12,5 +12,8 @@ from .core.errors import UserError as UserError
 from .server.config import ServerConfig as ServerConfig
 from .server.deps import RenderDep as RenderDep
 from .server.jinja import CustomJinja as CustomJinja
-from .server.server import init_server as init_server
 from .server.utils import redirect as redirect
+
+# must be last
+# isort: split
+from .run import run as run

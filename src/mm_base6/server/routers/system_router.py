@@ -10,7 +10,7 @@ router: APIRouter = APIRouter(prefix="/api/system", tags=["system"])
 
 @router.get("/stats")
 async def get_stats(core: BaseCoreDep) -> Stats:
-    return await core.system_service.get_stats()
+    return await core.system_service.get_stats
 
 
 @router.get("/logfile", response_class=PlainTextResponse)

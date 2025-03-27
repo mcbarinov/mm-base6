@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import threading
+import time
 from datetime import datetime
 from logging import Logger
-from typing import cast
+from typing import Literal, cast
 
 import anyio
 import mm_telegram
@@ -33,11 +35,24 @@ class Stats(BaseModel):
         last_run: datetime | None
         running: bool
 
+    class AsyncTask(BaseModel):
+        name: str
+        coro: str | None
+        start_time: float | None
+        status: Literal["running", "done", "cancelled"]
+
+        @property
+        def running_time(self) -> float | None:
+            if self.start_time is None:
+                return None
+            return time.time() - self.start_time
+
     db: dict[str, int]  # collection name -> count
     logfile: int  # size in bytes
     system_log: int  # count
     threads: list[ThreadInfo]
     scheduler_tasks: list[SchedulerTask]
+    async_tasks: list[AsyncTask]
 
 
 class DConfigInfo(BaseModel):
@@ -165,6 +180,7 @@ class SystemService:
         await DValueStorage.update_value("proxies_updated_at", utc_now())
         return len(proxies)
 
+    @property
     async def get_stats(self) -> Stats:
         # threads
         threads = []
@@ -195,12 +211,21 @@ class SystemService:
                 )
             )
 
+        async_tasks: list[Stats.AsyncTask] = []
+        for async_task in asyncio.all_tasks():
+            name = async_task.get_name()
+            coro = async_task.get_coro().__qualname__ if async_task.get_coro() is not None else None  # type: ignore[union-attr]
+            start_time = getattr(async_task, "start_time", None)
+            status = "cancelled" if async_task.cancelled() else "done" if async_task.done() else "running"
+            async_tasks.append(Stats.AsyncTask(name=name, coro=coro, start_time=start_time, status=status))
+
         return Stats(
             db=db_stats,
             logfile=(await self.logfile.stat()).st_size,
             system_log=await self.db.dlog.count({}),
             threads=threads,
             scheduler_tasks=scheduler_tasks,
+            async_tasks=async_tasks,
         )
 
     async def read_logfile(self) -> str:

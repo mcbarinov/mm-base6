@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import os
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Self, TypeVar
 
 from bson import ObjectId
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
@@ -44,13 +44,18 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         raise TypeError("Use `BaseCore.init()` instead of direct instantiation.")
 
     @classmethod
+    @abstractmethod
+    async def init(cls, core_config: CoreConfig) -> Self:
+        pass
+
+    @classmethod
     async def base_init(
         cls,
         core_config: CoreConfig,
         dconfig_settings: type[DCONFIG_co],
         dvalue_settings: type[DVALUE_co],
         db_settings: type[DB_co],
-    ) -> BaseCore[DCONFIG_co, DVALUE_co, DB_co]:
+    ) -> Self:
         inst = super().__new__(cls)
         inst.core_config = core_config
         inst.logger = init_logger("app", file_path=f"{core_config.data_dir}/app.log", level=core_config.logger_level)
