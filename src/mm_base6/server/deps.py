@@ -1,4 +1,4 @@
-from typing import Annotated, cast
+from typing import cast
 
 from fastapi import Depends, Request
 from jinja2 import Environment
@@ -26,7 +26,8 @@ async def get_form_data(request: Request) -> FormData:
     return await request.form()
 
 
-ServerConfigDep = Annotated[ServerConfig, Depends(get_server_config)]
-BaseCoreDep = Annotated[BaseCoreAny, Depends(get_core)]
-RenderDep = Annotated[Render, Depends(get_render)]
-FormDep = Annotated[FormData, Depends(get_form_data)]
+class BaseView:
+    core: BaseCoreAny = Depends(get_core)
+    server_config: ServerConfig = Depends(get_server_config)
+    form_data: FormData = Depends(get_form_data)
+    render: Render = Depends(get_render)

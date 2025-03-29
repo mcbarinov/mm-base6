@@ -5,19 +5,21 @@ from starlette.responses import PlainTextResponse
 
 from mm_base6 import ServerConfig
 from mm_base6.server.auth import ACCESS_TOKEN_NAME
-from mm_base6.server.deps import ServerConfigDep
+from mm_base6.server.cbv import cbv
+from mm_base6.server.deps import BaseView
 
 router: APIRouter = APIRouter(include_in_schema=False)
 
 
-@router.get("/api-post/{url:path}")
-def api_post(url: str, request: Request, server_config: ServerConfigDep) -> object:
-    return _api_method("post", url, server_config, request)
+@cbv(router)
+class CBV(BaseView):
+    @router.get("/api-post/{url:path}")
+    def api_post(self, url: str, request: Request) -> object:
+        return _api_method("post", url, self.server_config, request)
 
-
-@router.get("/api-delete/{url:path}")
-def api_delete(url: str, request: Request, server_config: ServerConfigDep) -> object:
-    return _api_method("delete", url, server_config, request)
+    @router.get("/api-delete/{url:path}")
+    def api_delete(self, url: str, request: Request) -> object:
+        return _api_method("delete", url, self.server_config, request)
 
 
 def _api_method(method: str, url: str, server_config: ServerConfig, req: Request) -> object:

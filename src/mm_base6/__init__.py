@@ -9,8 +9,9 @@ from .core.dconfig import DConfigModel as DConfigModel
 from .core.dvalue import DV as DV
 from .core.dvalue import DValueModel as DValueModel
 from .core.errors import UserError as UserError
+from .server.cbv import cbv as cbv
 from .server.config import ServerConfig as ServerConfig
-from .server.deps import RenderDep as RenderDep
+from .server.deps import BaseView as BaseView
 from .server.jinja import JinjaConfig as JinjaConfig
 from .server.utils import redirect as redirect
 
