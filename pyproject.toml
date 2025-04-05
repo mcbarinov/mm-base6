@@ -11,7 +11,7 @@ dependencies = [
     "itsdangerous~=2.2.0",
     "uvloop~=0.21.0",
     "psutil~=7.0.0",
-    "mm-std~=0.3.20",
+    "mm-std~=0.3.21",
 ]
 
 [build-system]
@@ -23,12 +23,12 @@ dev-dependencies = [
     "pytest~=8.3.5",
     "pytest-xdist~=3.6.1",
     "pytest-httpserver~=1.1.2",
-    "ruff~=0.11.2",
+    "ruff~=0.11.4",
     "pip-audit~=2.8.0",
     "bandit~=1.8.3",
     "mypy~=1.15.0",
     "watchfiles>=1.0.4",
-    "types-psutil>=7.0.0.20250218",
+    "types-psutil>=7.0.0.20250401",
 ]
 
 [tool.mypy]

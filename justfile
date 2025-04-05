@@ -33,4 +33,4 @@ publish: build
     git tag -a 'v{{version}}' -m 'v{{version}}' && git push origin v{{version}}
 
 dev:
-    uv run python -m watchfiles --sigint-timeout=5 --grace-period=5  --sigkill-timeout=5 "python -m app.main" src
+    uv run python -m watchfiles "python -m app.main" src

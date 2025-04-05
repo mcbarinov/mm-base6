@@ -59,7 +59,7 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         inst = super().__new__(cls)
         inst.core_config = core_config
         inst.logger = init_logger("app", file_path=f"{core_config.data_dir}/app.log", level=core_config.logger_level)
-        inst.scheduler = AsyncScheduler(inst.logger)
+        inst.scheduler = AsyncScheduler()
         conn = AsyncMongoConnection(inst.core_config.database_url)
         inst.mongo_client = conn.client
         inst.database = conn.database
