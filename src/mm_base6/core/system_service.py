@@ -5,13 +5,13 @@ import platform
 import threading
 import time
 from datetime import datetime, timedelta
-from logging import Logger
 from typing import Literal, cast
 
 import anyio
 import mm_telegram
 import psutil
 import pydash
+import structlog
 from bson import ObjectId
 from mm_std import AsyncScheduler, Err, Result, hra, synchronized, toml_dumps, toml_loads, utc_now
 from pydantic import BaseModel
@@ -21,6 +21,8 @@ from mm_base6.core.db import BaseDb, DConfigType, DLog
 from mm_base6.core.dconfig import DConfigStorage
 from mm_base6.core.dvalue import DValueStorage
 from mm_base6.core.errors import UserError
+
+logger = structlog.stdlib.get_logger()
 
 
 class Stats(BaseModel):
@@ -76,8 +78,7 @@ class DValueInfo(BaseModel):
 
 # noinspection PyMethodMayBeStatic
 class SystemService:
-    def __init__(self, core_config: CoreConfig, logger: Logger, db: BaseDb, scheduler: AsyncScheduler) -> None:
-        self.logger = logger
+    def __init__(self, core_config: CoreConfig, db: BaseDb, scheduler: AsyncScheduler) -> None:
         self.db = db
         self.logfile = anyio.Path(core_config.data_dir / "app.log")
         self.scheduler = scheduler
@@ -135,7 +136,7 @@ class SystemService:
 
     # dlogs
     async def dlog(self, category: str, data: object = None) -> None:
-        self.logger.debug("dlog: %s %s", category, data)
+        logger.debug("dlog: %s %s", category, data)
         await self.db.dlog.insert_one(DLog(id=ObjectId(), category=category, data=data))
 
     async def get_dlog_category_stats(self) -> dict[str, int]:
@@ -163,7 +164,7 @@ class SystemService:
         res = await mm_telegram.async_send_message(token, chat_id, message)
         if res.is_err():
             await self.dlog("send_telegram_message", {"error": res.err, "message": message, "data": res.data})
-            self.logger.error("send_telegram_message error: %s", res.err)
+            logger.error("send_telegram_message error", error=res.err)
         return res
 
     def has_proxies_settings(self) -> bool:

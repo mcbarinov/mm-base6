@@ -2,6 +2,7 @@ import asyncio
 import time
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, File, UploadFile
 from mm_std import Err, Ok, Result
 
@@ -9,6 +10,8 @@ from app.server.deps import View
 from mm_base6 import UserError, cbv
 
 router = APIRouter(prefix="/api/misc", tags=["misc"])
+
+logger = structlog.stdlib.get_logger()
 
 
 @cbv(router)
@@ -24,10 +27,10 @@ class CBV(View):
     @router.get("/sleep/{seconds}")
     async def sleep_seconds(self, seconds: int) -> dict[str, object]:
         start = time.perf_counter()
-        self.core.logger.debug("sleep_seconds called: %d", seconds)
+        logger.debug("sleep_seconds called: %d", seconds)
         await asyncio.sleep(seconds)
         counter = self.core.misc_service.increment_counter()
-        self.core.logger.debug("sleep_seconds: %d, perf_counter=%s, counter=%s", seconds, time.perf_counter() - start, counter)
+        logger.debug("sleep_seconds: %d, perf_counter=%s, counter=%s", seconds, time.perf_counter() - start, counter)
         return {"sleep_seconds": seconds, "counter": counter, "perf_counter": time.perf_counter() - start}
 
     @router.get("/result-ok")
