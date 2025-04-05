@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Generic, Self, TypeVar
 
+import structlog
 from bson import ObjectId
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
 from mm_std import AsyncScheduler, Err, Ok, init_logger, synchronized
@@ -16,6 +17,7 @@ from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb, DLog
 from mm_base6.core.dconfig import DConfigModel, DConfigStorage
 from mm_base6.core.dvalue import DValueModel, DValueStorage
+from mm_base6.core.logger import configure_logger
 from mm_base6.core.system_service import SystemService
 from mm_base6.core.types_ import DLOG
 
@@ -28,6 +30,8 @@ DCONFIG = TypeVar("DCONFIG", bound=DConfigModel)
 DVALUE = TypeVar("DVALUE", bound=DValueModel)
 DB = TypeVar("DB", bound=BaseDb)
 
+
+logger = structlog.stdlib.get_logger()
 
 class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
     core_config: CoreConfig
@@ -56,9 +60,12 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         dvalue_settings: type[DVALUE_co],
         db_settings: type[DB_co],
     ) -> Self:
+        configure_logger()
+
         inst = super().__new__(cls)
         inst.core_config = core_config
         inst.logger = init_logger("app", file_path=f"{core_config.data_dir}/app.log", level=core_config.logger_level)
+
         inst.scheduler = AsyncScheduler()
         conn = AsyncMongoConnection(inst.core_config.database_url)
         inst.mongo_client = conn.client
@@ -74,7 +81,7 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
 
     @synchronized
     async def reinit_scheduler(self) -> None:
-        self.logger.debug("Reinitializing scheduler...")
+        logger.debug("reinit scheduler")
         if self.scheduler.is_running():
             self.scheduler.stop()
         self.scheduler.clear_tasks()
@@ -86,7 +93,7 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
     async def startup(self) -> None:
         await self.start()
         await self.reinit_scheduler()
-        self.logger.debug("app started")
+        logger.debug("app started")
         if not self.core_config.debug:
             await self.dlog("app_start")
 
@@ -96,7 +103,7 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
             await self.dlog("app_stop")
         await self.stop()
         await self.mongo_client.close()
-        self.logger.debug("app stopped")
+        logger.debug("app stopped")
         # noinspection PyUnresolvedReferences,PyProtectedMember
         os._exit(0)
 
