@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -94,8 +95,14 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig, logger: L
 def configure_lifespan(core: BaseCore[DCONFIG_co, DVALUE_co, DB_co]) -> Lifespan[AppType]:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: UP043
-        yield
-        core.logger.debug("server shutdown")
-        await core.shutdown()
+        try:
+            yield
+        finally:
+            try:
+                core.logger.debug("server shutdown")
+                await core.shutdown()
+            except asyncio.CancelledError:
+                # Suppress CancelledError during shutdown
+                core.logger.debug("server shutdown interrupted by cancellation")
 
     return lifespan
