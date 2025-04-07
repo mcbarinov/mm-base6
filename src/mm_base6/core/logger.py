@@ -51,6 +51,7 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
     """
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG if developer_console else logging.INFO)
+    logger.propagate = False  # TODO: check if it's needed
     logger.handlers.clear()
 
     console_handler: logging.Handler
@@ -76,4 +77,5 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
     for name in ["mm_std", "pymongo"]:
         logging.getLogger(name).setLevel(logging.WARNING)
 
+    logging.getLogger("uvicorn").addHandler(logging.NullHandler())
     logging.getLogger("uvicorn").propagate = False
