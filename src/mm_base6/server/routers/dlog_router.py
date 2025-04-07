@@ -25,5 +25,4 @@ class CBV(BaseView):
 
     @router.delete("/")
     async def delete_all_dlogs(self) -> MongoDeleteResult:
-        self.core.logger.debug("delete_all_dlogs called")
         return await self.core.db.dlog.delete_many({})

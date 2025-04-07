@@ -1,6 +1,6 @@
 [project]
 name = "mm-base6"
-version = "0.0.11"
+version = "0.0.12"
 description = ""
 requires-python = ">=3.12"
 dependencies = [
@@ -11,7 +11,7 @@ dependencies = [
     "itsdangerous~=2.2.0",
     "uvloop~=0.21.0",
     "psutil~=7.0.0",
-    "mm-std~=0.3.21",
+    "mm-std~=0.3.22",
 ]
 
 [build-system]

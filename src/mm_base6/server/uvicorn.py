@@ -6,7 +6,9 @@ from fastapi import FastAPI
 
 
 async def serve_uvicorn(app: FastAPI, host: str, port: int, log_level: str) -> None:
-    config = uvicorn.Config(app, host=host, port=port, log_level=log_level, use_colors=True)
+    if log_level == "warning":  # TODO: it's temporary  to supress uvicorn logs
+        log_level = "critical"
+    config = uvicorn.Config(app, host=host, port=port, log_level=log_level, use_colors=True, log_config=None)
     server = uvicorn.Server(config)
 
     # Run with a custom signal handler to gracefully handle Ctrl+C

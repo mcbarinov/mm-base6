@@ -1,8 +1,8 @@
 import asyncio
+import logging
 import traceback
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from logging import Logger
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
@@ -24,6 +24,8 @@ from mm_base6.server.auth import AccessTokenMiddleware
 from mm_base6.server.jinja import JinjaConfig, init_env
 from mm_base6.server.routers import base_router
 
+logger = logging.getLogger(__name__)
+
 
 def init_server(
     core: BaseCore[DCONFIG_co, DVALUE_co, DB_co],
@@ -36,7 +38,7 @@ def init_server(
 
     configure_state(app, core, server_config, jinja_env)
     configure_openapi(app, core.core_config, server_config)
-    configure_exception_handler(app, core.core_config, core.logger)
+    configure_exception_handler(app, core.core_config)
 
     app.include_router(base_router)
     app.include_router(router)
@@ -71,9 +73,10 @@ def configure_openapi(app: FastAPI, core_config: CoreConfig, server_config: Serv
         return get_swagger_ui_html(openapi_url="/system/openapi.json", title=core_config.app_name)
 
 
-def configure_exception_handler(app: FastAPI, core_config: CoreConfig, logger: Logger) -> None:
+def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
     @app.exception_handler(Exception)
-    async def exception_handler(_request: Request, err: Exception) -> PlainTextResponse:
+    async def exception_handler(request: Request, err: Exception) -> PlainTextResponse:
+        logger.debug("exception_handler", extra={"exception": err})
         code = getattr(err, "code", None)
 
         message = f"{err.__class__.__name__}: {err}"
@@ -83,12 +86,14 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig, logger: L
             hide_stacktrace = True
 
         if not hide_stacktrace:
-            logger.exception(err)
+            tb = traceback.format_exc()
+            logger.error(f"exception_handler: url={request.url}, error={err}\n{tb}")
             message += "\n\n" + traceback.format_exc()
 
         if not core_config.debug:
             message = "error"
 
+        logger.debug("exception_handler", extra={"m": message})
         return PlainTextResponse(message, status_code=500)
 
 
@@ -99,10 +104,10 @@ def configure_lifespan(core: BaseCore[DCONFIG_co, DVALUE_co, DB_co]) -> Lifespan
             yield
         finally:
             try:
-                core.logger.debug("server shutdown")
+                logger.debug("server shutdown")
                 await core.shutdown()
             except asyncio.CancelledError:
                 # Suppress CancelledError during shutdown
-                core.logger.debug("server shutdown interrupted by cancellation")
+                logger.debug("server shutdown interrupted by cancellation")
 
     return lifespan

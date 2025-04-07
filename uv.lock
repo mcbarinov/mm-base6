@@ -609,7 +609,7 @@ wheels = [
 
 [[package]]
 name = "mm-base6"
-version = "0.0.11"
+version = "0.0.12"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
@@ -641,7 +641,7 @@ requires-dist = [
     { name = "itsdangerous", specifier = "~=2.2.0" },
     { name = "mm-jinja", specifier = "~=0.0.5" },
     { name = "mm-mongo", specifier = ">=0.4.4" },
-    { name = "mm-std", specifier = "~=0.3.21" },
+    { name = "mm-std", specifier = "~=0.3.22" },
     { name = "mm-telegram", specifier = "~=0.0.8" },
     { name = "psutil", specifier = "~=7.0.0" },
     { name = "uvloop", specifier = "~=0.21.0" },
@@ -685,7 +685,7 @@ wheels = [
 
 [[package]]
 name = "mm-std"
-version = "0.3.21"
+version = "0.3.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -697,11 +697,10 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "requests", extra = ["socks"] },
     { name = "rich" },
-    { name = "structlog" },
     { name = "tomlkit" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/02/dccf6d6b73f8621308e6339132118da30d44c716dc961826e8acba3a8013/mm_std-0.3.21-py3-none-any.whl", hash = "sha256:e5343689b31d9b7f6709e6bc8dc49b08df6cdc4dac03d803a51034d207b508af", size = 22387 },
+    { url = "https://files.pythonhosted.org/packages/83/0f/138c366eac0a77f9ef512a6959f543e7b62d9c3d30eba6c4bed13b067cbc/mm_std-0.3.22-py3-none-any.whl", hash = "sha256:8e3c8fa21d3ca317d167d5b8bf626257f8a726219f2b53b19ef6cfca0c9b2083", size = 22274 },
 ]
 
 [[package]]
@@ -1398,15 +1397,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/28/3f/13cacea96900bbd31bb05c6b74135f85d15564fc583802be56976c940470/stevedore-5.4.1.tar.gz", hash = "sha256:3135b5ae50fe12816ef291baff420acb727fcd356106e3e9cbfa9e5985cd6f4b", size = 513858 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/45/8c4ebc0c460e6ec38e62ab245ad3c7fc10b210116cea7c16d61602aa9558/stevedore-5.4.1-py3-none-any.whl", hash = "sha256:d10a31c7b86cba16c1f6e8d15416955fc797052351a56af15e608ad20811fcfe", size = 49533 },
-]
-
-[[package]]
-name = "structlog"
-version = "25.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/78/b8/d3670aec25747e32d54cd5258102ae0d69b9c61c79e7aa326be61a570d0d/structlog-25.2.0.tar.gz", hash = "sha256:d9f9776944207d1035b8b26072b9b140c63702fd7aa57c2f85d28ab701bd8e92", size = 1367438 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/eb/244741c1abf7b4092686db0798a4c43491298f40ddec4226f5c4f6b5d3eb/structlog-25.2.0-py3-none-any.whl", hash = "sha256:0fecea2e345d5d491b72f3db2e5fcd6393abfc8cd06a4851f21fcd4d1a99f437", size = 68448 },
 ]
 
 [[package]]
