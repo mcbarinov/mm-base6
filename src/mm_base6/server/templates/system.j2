@@ -110,8 +110,8 @@
     </section>
   </div>
 
-  <section>
-    <h5>scheduler tasks / {{ stats.scheduler.tasks | length }}</h5>
+  <details>
+    <summary><h5>scheduler / {{ stats.scheduler.tasks | length }}</h5></summary>
     <table>
       <tr>
         <th>task_id</th>
@@ -132,10 +132,11 @@
         </tr>
       {% endfor %}
     </table>
-  </section><br>
+  </details>
 
-  <section>
-    <h5>async tasks / {{ stats.async_tasks | length }}</h5>
+
+  <details>
+    <summary><h5>async tasks / {{ stats.async_tasks | length }}</h5></summary>
     <table class="sortable">
       <thead>
       <tr>
@@ -154,10 +155,12 @@
         </tr>
       {% endfor %}
     </table>
-  </section><br>
+  </details>
 
-  <section>
-    <h5>threads / {{ stats.threads | length }}</h5>
+  <details>
+    <summary>
+      <h5>threads / {{ stats.threads | length }}</h5>
+    </summary>
     <table>
       <tr>
         <th>name</th>
@@ -172,6 +175,6 @@
         </tr>
       {% endfor %}
     </table>
-  </section>
+  </details>
 
 {% endblock %}

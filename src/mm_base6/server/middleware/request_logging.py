@@ -47,18 +47,18 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.perf_counter()
         response = await call_next(request)
         elapsed = (time.perf_counter() - start_time) * 1000
-
         client_ip = request.client.host if request.client else "unknown"
-
-        self.access_logger.info(
-            "request",
-            extra={
-                "method": request.method,
-                "path": request.url.path,
-                "status_code": response.status_code,
-                "elapsed_ms": round(elapsed, 2),
-                "client_ip": client_ip,
-            },
-        )
+        path = request.url.path
+        if not path.startswith("/assets/"):
+            self.access_logger.info(
+                "request",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": response.status_code,
+                    "elapsed_ms": round(elapsed, 2),
+                    "client_ip": client_ip,
+                },
+            )
 
         return response
