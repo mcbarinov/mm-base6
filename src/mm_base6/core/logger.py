@@ -55,7 +55,6 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
     logger.handlers.clear()
 
     console_handler: logging.Handler
-
     if developer_console:
         console_handler = RichHandler(rich_tracebacks=True, show_time=True, show_level=True, show_path=False)
         formatter = ExtraFormatter("{name} {message}", style="{")
@@ -71,6 +70,16 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
         ExtraFormatter("{asctime} - {name} - {levelname} - {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
     )
     logger.addHandler(file_handler)
+
+    # access logger
+    access_handler = RotatingFileHandler(data_dir / "access.log", maxBytes=10 * 1024 * 1024, backupCount=1)
+    access_handler.setLevel(logging.INFO)
+    access_handler.setFormatter(ExtraFormatter("{asctime} - {levelname} - {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{"))
+    access_logger = logging.getLogger("access")
+    access_logger.setLevel(logging.INFO)
+    access_logger.handlers.clear()
+    access_logger.addHandler(access_handler)
+    access_logger.propagate = False
 
     logger.addHandler(console_handler)
 

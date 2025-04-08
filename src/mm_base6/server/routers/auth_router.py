@@ -4,9 +4,9 @@ from fastapi import APIRouter, Form
 from starlette import status
 from starlette.responses import HTMLResponse, RedirectResponse
 
-from mm_base6.server.auth import ACCESS_TOKEN_NAME
 from mm_base6.server.cbv import cbv
 from mm_base6.server.deps import BaseView
+from mm_base6.server.middleware.auth import ACCESS_TOKEN_NAME
 
 router: APIRouter = APIRouter(prefix="/auth", include_in_schema=False)
 

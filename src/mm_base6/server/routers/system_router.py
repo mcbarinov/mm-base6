@@ -44,13 +44,13 @@ class CBV(BaseView):
         await self.core.db.database.command({"profile": 0})
         await self.core.db.database["system.profile"].delete_many({})  # TODO: it does not work :(
 
-    @router.get("/logfile", response_class=PlainTextResponse)
-    async def get_logfile(self) -> str:
-        return await self.core.system_service.read_logfile()
+    @router.get("/logfile/{file}", response_class=PlainTextResponse)
+    async def get_logfile(self, file: str) -> str:
+        return await self.core.system_service.read_logfile(file)
 
-    @router.delete("/logfile")
-    async def clean_logfile(self) -> None:
-        await self.core.system_service.clean_logfile()
+    @router.delete("/logfile/{file}")
+    async def clean_logfile(self, file: str) -> None:
+        await self.core.system_service.clean_logfile(file)
 
     @router.post("/scheduler/start")
     async def start_scheduler(self) -> None:

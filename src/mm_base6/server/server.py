@@ -20,8 +20,9 @@ from mm_base6 import CoreConfig, ServerConfig
 from mm_base6.core.core import BaseCore, DB_co, DCONFIG_co, DVALUE_co
 from mm_base6.core.errors import UserError
 from mm_base6.server import utils
-from mm_base6.server.auth import AccessTokenMiddleware
 from mm_base6.server.jinja import JinjaConfig, init_env
+from mm_base6.server.middleware.auth import AccessTokenMiddleware
+from mm_base6.server.middleware.request_logging import RequestLoggingMiddleware
 from mm_base6.server.routers import base_router
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ def init_server(
     app.mount("/assets", StaticFiles(directory=Path(__file__).parent.absolute() / "assets"), name="assets")
     app.add_middleware(AccessTokenMiddleware, access_token=server_config.access_token)
     app.add_middleware(SessionMiddleware, secret_key=server_config.access_token)
+    app.add_middleware(RequestLoggingMiddleware, core.core_config.data_dir / "access.log", core.core_config.debug)
     return app
 
 

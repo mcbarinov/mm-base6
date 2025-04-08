@@ -54,7 +54,8 @@ class Stats(BaseModel):
             return time.time() - self.start_time
 
     db: dict[str, int]  # collection name -> count
-    logfile: int  # size in bytes
+    logfile_app: int  # size in bytes
+    logfile_access: int  # size in bytes
     system_log: int  # count
     threads: list[ThreadInfo]
     scheduler: Scheduler
@@ -81,7 +82,8 @@ logger = logging.getLogger(__name__)
 class SystemService:
     def __init__(self, core_config: CoreConfig, db: BaseDb, scheduler: AsyncScheduler) -> None:
         self.db = db
-        self.logfile = anyio.Path(core_config.data_dir / "app.log")
+        self.logfile_app = anyio.Path(core_config.data_dir / "app.log")
+        self.logfile_access = anyio.Path(core_config.data_dir / "access.log")
         self.scheduler = scheduler
 
     # dconfig
@@ -229,7 +231,8 @@ class SystemService:
 
         return Stats(
             db=db_stats,
-            logfile=(await self.logfile.stat()).st_size,
+            logfile_app=(await self.logfile_app.stat()).st_size,
+            logfile_access=(await self.logfile_access.stat()).st_size,
             system_log=await self.db.dlog.count({}),
             threads=threads,
             scheduler=scheduler,
@@ -306,11 +309,21 @@ class SystemService:
 
         return await asyncio.to_thread(psutils_stats)
 
-    async def read_logfile(self) -> str:
-        return await self.logfile.read_text(encoding="utf-8")
+    async def read_logfile(self, file: str) -> str:
+        if file == "app":
+            return await self.logfile_app.read_text(encoding="utf-8")
+        if file == "access":
+            return await self.logfile_access.read_text(encoding="utf-8")
+        raise ValueError(f"Unknown logfile: {file}")
 
-    async def clean_logfile(self) -> None:
-        await self.logfile.write_text("")
+    async def clean_logfile(self, file: str) -> None:
+        if file == "app":
+            await self.logfile_app.write_text("", encoding="utf-8")
+            return
+        if file == "access":
+            await self.logfile_access.write_text("", encoding="utf-8")
+            return
+        raise ValueError(f"Unknown logfile: {file}")
 
     async def get_mongodb_profile(self) -> dict[str, object]:
         return await self.db.database.command("profile", -1)

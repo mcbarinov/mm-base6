@@ -64,13 +64,25 @@
           <td><a href="/api/system/stats">view</a></td>
         </tr>
         <tr>
-          <td>logfile</td>
-          <td>{{ stats.logfile | filesizeformat }}</td>
+          <td>logfile, app</td>
+          <td>{{ stats.logfile_app | filesizeformat }}</td>
           <td>
             <nav>
               <ul>
-                <li><a href="/api/system/logfile">view</a></li>
-                <li><a href="/api-delete/system/logfile" {{ confirm }}>clean</a></li>
+                <li><a href="/api/system/logfile/app">view</a></li>
+                <li><a href="/api-delete/system/logfile/app" {{ confirm }}>clean</a></li>
+              </ul>
+            </nav>
+          </td>
+        </tr>
+        <tr>
+          <td>logfile, access</td>
+          <td>{{ stats.logfile_access | filesizeformat }}</td>
+          <td>
+            <nav>
+              <ul>
+                <li><a href="/api/system/logfile/access">view</a></li>
+                <li><a href="/api-delete/system/logfile/access" {{ confirm }}>clean</a></li>
               </ul>
             </nav>
           </td>

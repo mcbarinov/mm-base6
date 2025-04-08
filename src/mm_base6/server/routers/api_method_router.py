@@ -4,9 +4,9 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
 from mm_base6 import ServerConfig
-from mm_base6.server.auth import ACCESS_TOKEN_NAME
 from mm_base6.server.cbv import cbv
 from mm_base6.server.deps import BaseView
+from mm_base6.server.middleware.auth import ACCESS_TOKEN_NAME
 
 router: APIRouter = APIRouter(include_in_schema=False)
 

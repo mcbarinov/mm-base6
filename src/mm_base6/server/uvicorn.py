@@ -8,7 +8,7 @@ from fastapi import FastAPI
 async def serve_uvicorn(app: FastAPI, host: str, port: int, log_level: str) -> None:
     # logging.config.dictConfig(LOGGING_CONFIG)
 
-    config = uvicorn.Config(app, host=host, port=port, log_level=log_level, log_config=None)
+    config = uvicorn.Config(app, host=host, port=port, log_level=log_level)
     server = uvicorn.Server(config)
 
     # Run with a custom signal handler to gracefully handle Ctrl+C
