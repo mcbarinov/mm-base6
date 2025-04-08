@@ -78,8 +78,8 @@
       </table>
     </section>
     <section>
+      <h5>db / {{ stats.db | length }}</h5>
       <table>
-        <caption>db / {{ stats.db | length }}</caption>
         {% for k,v in stats.db.items() %}
           <tr>
             <td>{{ k }}</td>
@@ -87,6 +87,13 @@
           </tr>
         {% endfor %}
       </table>
+      <nav>
+        <ul>
+          <li><a href="/api/system/mongo/profiling-status">profiling status</a></li>
+          <li><a href="/api/system/mongo/slow">slow queries</a></li>
+        </ul>
+      </nav>
+
 
     </section>
   </div>

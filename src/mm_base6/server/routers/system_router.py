@@ -1,6 +1,10 @@
+from collections.abc import Mapping
+from typing import Any
+
+from bson import json_util
 from fastapi import APIRouter
 from mm_std import Result
-from starlette.responses import PlainTextResponse
+from starlette.responses import PlainTextResponse, Response
 
 from mm_base6.server.cbv import cbv
 from mm_base6.server.deps import BaseView
@@ -15,6 +19,30 @@ class CBV(BaseView):
         psutil_stats = await self.core.system_service.get_psutil_stats()
         stats = await self.core.system_service.get_stats()
         return psutil_stats | stats.model_dump()
+
+    @router.get("/mongo/profiling-status")
+    async def read_mongo_profiling_status(self) -> Mapping[str, Any]:
+        return await self.core.db.database.command("profile", -1)
+
+    @router.get("/mongo/slow")
+    async def get_mongo_slow(self) -> Response:
+        limit = 10
+        cursor = self.core.db.database["system.profile"].find().sort("ts", -1).limit(limit)
+        res = await cursor.to_list(limit)
+        # BSON -> JSON string
+        json_data: str = json_util.dumps(res)
+        return Response(content=json_data, media_type="application/json")
+
+    @router.post("/mongo/slowms")
+    async def set_mongo_profiling(self, slowms: int) -> Mapping[str, Any]:
+        if slowms > 0:
+            return await self.core.db.database.command("profile", 1, slowms=slowms)
+        return await self.core.db.database.command({"profile": 0})  # TODO: it does not work :(
+
+    @router.delete("/mongo/slowms")
+    async def delete_mongo_slow_queries(self) -> None:
+        await self.core.db.database.command({"profile": 0})
+        await self.core.db.database["system.profile"].delete_many({})  # TODO: it does not work :(
 
     @router.get("/logfile", response_class=PlainTextResponse)
     async def get_logfile(self) -> str:

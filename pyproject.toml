@@ -1,6 +1,6 @@
 [project]
 name = "mm-base6"
-version = "0.0.12"
+version = "0.0.13"
 description = ""
 requires-python = ">=3.12"
 dependencies = [
@@ -24,7 +24,7 @@ dev-dependencies = [
     "pytest-xdist~=3.6.1",
     "pytest-httpserver~=1.1.2",
     "ruff~=0.11.4",
-    "pip-audit~=2.8.0",
+    "pip-audit~=2.9.0",
     "bandit~=1.8.3",
     "mypy~=1.15.0",
     "watchfiles>=1.0.4",

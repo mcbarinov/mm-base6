@@ -311,3 +311,6 @@ class SystemService:
 
     async def clean_logfile(self) -> None:
         await self.logfile.write_text("")
+
+    async def get_mongodb_profile(self) -> dict[str, object]:
+        return await self.db.database.command("profile", -1)
