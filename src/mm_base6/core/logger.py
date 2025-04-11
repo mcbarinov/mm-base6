@@ -54,6 +54,8 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
     logger.propagate = False  # TODO: check if it's needed
     logger.handlers.clear()
 
+    data_dir.mkdir(parents=True, exist_ok=True)
+
     console_handler: logging.Handler
     if developer_console:
         console_handler = RichHandler(rich_tracebacks=True, show_time=True, show_level=True, show_path=False)
