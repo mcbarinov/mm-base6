@@ -1,5 +1,5 @@
 from markupsafe import Markup
-from mm_base6 import CustomJinja
+from mm_base6 import JinjaConfig
 
 from app.core.core import Core
 from app.core.db import DataStatus
@@ -26,7 +26,7 @@ async def footer_info(core: Core) -> Markup:
     return Markup(info)  # noqa: S704 # nosec
 
 
-custom_jinja = CustomJinja(
+jinja_config = JinjaConfig(
     header_info=header_info,
     header_info_new_line=False,
     footer_info=footer_info,

@@ -1,3 +1,4 @@
+import logging
 import random
 
 from bson import ObjectId
@@ -7,6 +8,8 @@ from mm_std import hr
 from app.core.db import Data, DataStatus
 from app.core.types_ import AppService, AppServiceParams
 
+logger = logging.getLogger(__name__)
+
 
 class DataService(AppService):
     def __init__(self, base_params: AppServiceParams) -> None:
@@ -15,6 +18,8 @@ class DataService(AppService):
     async def generate_one(self) -> MongoInsertOneResult:
         status = random.choice(list(DataStatus))
         value = random.randint(0, 1_000_000)
+
+        logger.debug("generate_one", extra={"status": status, "value": value})
 
         return await self.db.data.insert_one(Data(id=ObjectId(), status=status, value=value))
 
