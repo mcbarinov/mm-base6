@@ -324,6 +324,3 @@ class SystemService:
             await self.logfile_access.write_text("", encoding="utf-8")
             return
         raise ValueError(f"Unknown logfile: {file}")
-
-    async def get_mongodb_profile(self) -> dict[str, object]:
-        return await self.db.database.command("profile", -1)

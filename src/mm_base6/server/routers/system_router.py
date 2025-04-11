@@ -20,29 +20,26 @@ class CBV(BaseView):
         stats = await self.core.system_service.get_stats()
         return psutil_stats | stats.model_dump()
 
-    @router.get("/mongo/profiling-status")
-    async def read_mongo_profiling_status(self) -> Mapping[str, Any]:
-        return await self.core.db.database.command("profile", -1)
+    @router.get("/mongo/profile")
+    async def read_mongo_profile(self) -> Mapping[str, Any]:
+        return await self.core.database.command({"profile": -1})
 
     @router.get("/mongo/slow")
     async def get_mongo_slow(self) -> Response:
         limit = 10
         cursor = self.core.db.database["system.profile"].find().sort("ts", -1).limit(limit)
         res = await cursor.to_list(limit)
-        # BSON -> JSON string
         json_data: str = json_util.dumps(res)
         return Response(content=json_data, media_type="application/json")
 
-    @router.post("/mongo/slowms")
-    async def set_mongo_profiling(self, slowms: int) -> Mapping[str, Any]:
-        if slowms > 0:
-            return await self.core.db.database.command("profile", 1, slowms=slowms)
-        return await self.core.db.database.command({"profile": 0})  # TODO: it does not work :(
+    @router.post("/mongo/profile")
+    async def set_mongo_profiling(self, level: int, slowms: int) -> Mapping[str, Any]:
+        return await self.core.database.command({"profile": level, "slowms": slowms})
 
-    @router.delete("/mongo/slowms")
+    @router.delete("/mongo/slow")
     async def delete_mongo_slow_queries(self) -> None:
-        await self.core.db.database.command({"profile": 0})
-        await self.core.db.database["system.profile"].delete_many({})  # TODO: it does not work :(
+        await self.core.database.command({"profile": 0})
+        await self.core.database.drop_collection("system.profile")
 
     @router.get("/logfile/{file}", response_class=PlainTextResponse)
     async def get_logfile(self, file: str) -> str:

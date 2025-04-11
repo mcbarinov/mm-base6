@@ -27,10 +27,10 @@ class CBV(View):
     @router.get("/sleep/{seconds}")
     async def sleep_seconds(self, seconds: int) -> dict[str, object]:
         start = time.perf_counter()
-        logger.debug("sleep_seconds called: %d", seconds)
+        logger.info("sleep_seconds called: %d", seconds)
         await asyncio.sleep(seconds)
         counter = self.core.misc_service.increment_counter()
-        logger.debug("sleep_seconds: %d, perf_counter=%s, counter=%s", seconds, time.perf_counter() - start, counter)
+        logger.info("sleep_seconds: %d, perf_counter=%s, counter=%s", seconds, time.perf_counter() - start, counter)
         return {"sleep_seconds": seconds, "counter": counter, "perf_counter": time.perf_counter() - start}
 
     @router.get("/result-ok")
