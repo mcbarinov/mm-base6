@@ -2,8 +2,8 @@
 {% block content %}
   <nav>
     <ul>
-      <li><h3>dvalue</h3></li>
-      <li><a href="/api/system/dvalues/toml">view</a></li>
+      <li><h3>dynamic values</h3></li>
+      <li><a href="/api/system/dynamic-values/toml">view</a></li>
     </ul>
   </nav>
 
@@ -19,20 +19,20 @@
     </tr>
     </thead>
     <tbody>
-    {% for key, value in info.dvalue.items() %}
+    {% for key, value in info.dynamic_values.items() %}
       <tr>
         <td title="{{ info.descriptions[key] | escape }}">{{ key }}</td>
         <td>
           {{ value | string | truncate(119) }}
         </td>
         <td>{{ info.persistent[key] | yes_no }}</td>
-        <td><a href="/api/system/dvalues/{{ key }}/toml">toml</a></td>
-        <td><a href="/system/dvalues/{{ key }}">update</a></td>
+        <td><a href="/api/system/dynamic-values/{{ key }}/toml">toml</a></td>
+        <td><a href="/system/dynamic-values/{{ key }}">update</a></td>
         <td>
           {% if info.persistent[key] %}
-            <a href="/api/system/dvalues/{{ key }}">db</a>
+            <a href="/api/system/dynamic-values/{{ key }}">db</a>
           {% endif %}
-          <a href="/api/system/dvalues/{{ key }}/value">value</a>
+          <a href="/api/system/dynamic-values/{{ key }}/value">value</a>
         </td>
       </tr>
     {% endfor %}

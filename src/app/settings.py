@@ -4,7 +4,7 @@ from decimal import Decimal
 from fastapi import APIRouter
 from mm_std import utc_now
 
-from mm_base6 import DC, DV, CoreConfig, DConfigModel, DValueModel, ServerConfig
+from mm_base6 import DC, DV, CoreConfig, DynamicConfigsModel, DynamicValuesModel, ServerConfig
 
 core_config = CoreConfig()
 
@@ -13,7 +13,7 @@ server_config.tags = ["data", "misc"]
 server_config.main_menu = {"/data": "data", "/misc": "misc"}
 
 
-class DConfigSettings(DConfigModel):
+class DynamicConfigs(DynamicConfigsModel):
     proxies_url = DC("http://localhost:8000", "proxies url, each proxy on new line")
     telegram_token = DC("", "telegram bot token", hide=True)
     telegram_chat_id = DC(0, "telegram chat id")
@@ -24,7 +24,7 @@ class DConfigSettings(DConfigModel):
     long_cfg_1 = DC("many lines\n" * 5)
 
 
-class DValueSettings(DValueModel):
+class DynamicValues(DynamicValuesModel):
     proxies: DV[list[str]] = DV([])
     proxies_updated_at: DV[datetime | None] = DV(None)
     tmp1 = DV("bla")

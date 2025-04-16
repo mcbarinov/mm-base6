@@ -10,14 +10,14 @@
           <td><a href="/system/openapi">view</a></td>
         </tr>
         <tr>
-          <td title="stands for Dynamic Config">dconfigs</td>
+          <td>dynamic configs</td>
           <td></td>
-          <td><a href="/system/dconfigs">view</a></td>
+          <td><a href="/system/dynamic-configs">view</a></td>
         </tr>
         <tr>
-          <td title="stands for Dynamic Value">dvalues</td>
+          <td>dynamic values</td>
           <td></td>
-          <td><a href="/system/dvalues">view</a></td>
+          <td><a href="/system/dynamic-values">view</a></td>
         </tr>
         <tr>
           <td title="stands for Data Log">dlogs</td>
@@ -27,7 +27,7 @@
         {% if has_proxies_settings %}
           <tr>
             <td>proxies</td>
-            <td>{{ dvalue.proxies | length }}</td>
+            <td>{{ dynamic_values.proxies | length }}</td>
             <td><a href="/api-post/system/update-proxies">update</a></td>
           </tr>
         {% endif %}

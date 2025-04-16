@@ -3,17 +3,17 @@ from typing import Self
 from app.core.db import Db
 from app.core.services.data_service import DataService
 from app.core.services.misc_service import MiscService
-from app.settings import DConfigSettings, DValueSettings
+from app.settings import DynamicConfigs, DynamicValues
 from mm_base6 import BaseCore, CoreConfig
 
 
-class Core(BaseCore[DConfigSettings, DValueSettings, Db]):
+class Core(BaseCore[DynamicConfigs, DynamicValues, Db]):
     data_service: DataService
     misc_service: MiscService
 
     @classmethod
     async def init(cls, core_config: CoreConfig) -> Self:
-        res = await super().base_init(core_config, DConfigSettings, DValueSettings, Db)
+        res = await super().base_init(core_config, DynamicConfigs, DynamicValues, Db)
         res.data_service = DataService(res.base_service_params)
         res.misc_service = MiscService(res.base_service_params)
         return res

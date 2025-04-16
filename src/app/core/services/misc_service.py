@@ -26,6 +26,6 @@ class MiscService(AppService):
         self.counter.increment()
         return self.counter.get()
 
-    async def update_dvalue(self) -> int:
-        self.dvalue.processed_block = self.dvalue.processed_block + 1
-        return self.dvalue.processed_block
+    async def update_dynamic_value(self) -> int:
+        self.dynamic_values.processed_block = self.dynamic_values.processed_block + 1
+        return self.dynamic_values.processed_block

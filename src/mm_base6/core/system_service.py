@@ -17,9 +17,9 @@ from mm_std import AsyncScheduler, Result, http_request, synchronized, toml_dump
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig
-from mm_base6.core.db import BaseDb, DConfigType, DLog
-from mm_base6.core.dconfig import DConfigStorage
-from mm_base6.core.dvalue import DValueStorage
+from mm_base6.core.db import BaseDb, DLog, DynamicConfigType
+from mm_base6.core.dynamic_config import DynamicConfigStorage
+from mm_base6.core.dynamic_value import DynamicValueStorage
 from mm_base6.core.errors import UserError
 
 
@@ -62,15 +62,15 @@ class Stats(BaseModel):
     async_tasks: list[AsyncTask]
 
 
-class DConfigInfo(BaseModel):
-    dconfig: dict[str, object]
+class DynamicConfigsInfo(BaseModel):
+    dynamic_configs: dict[str, object]
     descriptions: dict[str, str]
-    types: dict[str, DConfigType]
+    types: dict[str, DynamicConfigType]
     hidden: set[str]
 
 
-class DValueInfo(BaseModel):
-    dvalue: dict[str, object]
+class DynamicValuesInfo(BaseModel):
+    dynamic_values: dict[str, object]
     persistent: dict[str, bool]
     descriptions: dict[str, str]
 
@@ -86,56 +86,56 @@ class SystemService:
         self.logfile_access = anyio.Path(core_config.data_dir / "access.log")
         self.scheduler = scheduler
 
-    # dconfig
+    # dynamic configs
 
-    def get_dconfig_info(self) -> DConfigInfo:
-        return DConfigInfo(
-            dconfig=DConfigStorage.storage,
-            descriptions=DConfigStorage.descriptions,
-            types=DConfigStorage.types,
-            hidden=DConfigStorage.hidden,
+    def get_dynamic_configs_info(self) -> DynamicConfigsInfo:
+        return DynamicConfigsInfo(
+            dynamic_configs=DynamicConfigStorage.storage,
+            descriptions=DynamicConfigStorage.descriptions,
+            types=DynamicConfigStorage.types,
+            hidden=DynamicConfigStorage.hidden,
         )
 
-    def export_dconfig_as_toml(self) -> str:
-        result = pydash.omit(DConfigStorage.storage, *DConfigStorage.hidden)
+    def export_dynamic_configs_as_toml(self) -> str:
+        result = pydash.omit(DynamicConfigStorage.storage, *DynamicConfigStorage.hidden)
         return toml_dumps(result)
 
-    async def update_dconfig_from_toml(self, toml_value: str) -> bool | None:
+    async def update_dynamic_configs_from_toml(self, toml_value: str) -> bool | None:
         data = toml_loads(toml_value)
         if isinstance(data, dict):
-            return await DConfigStorage.update({key: str(value) for key, value in data.items()})
+            return await DynamicConfigStorage.update({key: str(value) for key, value in data.items()})
 
-    async def update_dconfig(self, data: dict[str, str]) -> bool:
-        return await DConfigStorage.update(data)
+    async def update_dynamic_config(self, data: dict[str, str]) -> bool:
+        return await DynamicConfigStorage.update(data)
 
-    def has_dconfig_key(self, key: str) -> bool:
-        return key in DConfigStorage.storage
+    def has_dynamic_config_key(self, key: str) -> bool:
+        return key in DynamicConfigStorage.storage
 
-    # dvalue
-    def get_dvalue_info(self) -> DValueInfo:
-        return DValueInfo(
-            dvalue=DValueStorage.storage,
-            persistent=DValueStorage.persistent,
-            descriptions=DValueStorage.descriptions,
+    # dynamic value
+    def get_dynamic_values_info(self) -> DynamicValuesInfo:
+        return DynamicValuesInfo(
+            dynamic_values=DynamicValueStorage.storage,
+            persistent=DynamicValueStorage.persistent,
+            descriptions=DynamicValueStorage.descriptions,
         )
 
-    def export_dvalue_as_toml(self) -> str:
-        return toml_dumps(DValueStorage.storage)
+    def export_dynamic_values_as_toml(self) -> str:
+        return toml_dumps(DynamicValueStorage.storage)
 
-    def export_dvalue_field_as_toml(self, key: str) -> str:
-        return toml_dumps({key: DValueStorage.storage[key]})
+    def export_dynamic_value_as_toml(self, key: str) -> str:
+        return toml_dumps({key: DynamicValueStorage.storage[key]})
 
-    def get_dvalue_value(self, key: str) -> object:
-        return DValueStorage.storage[key]
+    def get_dynamic_value(self, key: str) -> object:
+        return DynamicValueStorage.storage[key]
 
-    async def update_dvalue_field(self, key: str, toml_str: str) -> None:
+    async def update_dynamic_value(self, key: str, toml_str: str) -> None:
         data = toml_loads(toml_str)
         if key not in data:
             raise UserError(f"Key '{key}' not found in toml data")
-        await DValueStorage.update_value(key, data[key])
+        await DynamicValueStorage.update_value(key, data[key])
 
-    def has_dvalue_key(self, key: str) -> bool:
-        return key in DValueStorage.storage
+    def has_dynamic_value_key(self, key: str) -> bool:
+        return key in DynamicValueStorage.storage
 
     # dlogs
     async def dlog(self, category: str, data: object = None) -> None:
@@ -152,8 +152,8 @@ class SystemService:
 
     def has_telegram_settings(self) -> bool:
         try:
-            token = cast(str, DConfigStorage.storage.get("telegram_token"))
-            chat_id = cast(int, DConfigStorage.storage.get("telegram_chat_id"))
+            token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
+            chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
             return ":" in token and chat_id != 0  # noqa: TRY300
         except Exception:
             return False
@@ -162,8 +162,8 @@ class SystemService:
         # TODO: run it in a separate thread
         if not self.has_telegram_settings():
             return Result.failure("telegram token or chat_id is not set")
-        token = cast(str, DConfigStorage.storage.get("telegram_token"))
-        chat_id = cast(int, DConfigStorage.storage.get("telegram_chat_id"))
+        token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
+        chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
         res = await mm_telegram.send_message(token, chat_id, message)
         if res.is_error():
             await self.dlog("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
@@ -172,22 +172,22 @@ class SystemService:
 
     def has_proxies_settings(self) -> bool:
         return (
-            "proxies_url" in DConfigStorage.storage
-            and "proxies" in DValueStorage.storage
-            and "proxies_updated_at" in DValueStorage.storage
+            "proxies_url" in DynamicConfigStorage.storage
+            and "proxies" in DynamicValueStorage.storage
+            and "proxies_updated_at" in DynamicValueStorage.storage
         )
 
     @synchronized
     async def update_proxies(self) -> int | None:
-        proxies_url = cast(str, DConfigStorage.storage.get("proxies_url"))
+        proxies_url = cast(str, DynamicConfigStorage.storage.get("proxies_url"))
         res = await http_request(proxies_url)
         if res.is_error():
             await self.dlog("update_proxies", {"error": res.error})
             return -1
         proxies = (res.body or "").strip().splitlines()
         proxies = [p.strip() for p in proxies if p.strip()]
-        await DValueStorage.update_value("proxies", proxies)
-        await DValueStorage.update_value("proxies_updated_at", utc_now())
+        await DynamicValueStorage.update_value("proxies", proxies)
+        await DynamicValueStorage.update_value("proxies_updated_at", utc_now())
         return len(proxies)
 
     async def get_stats(self) -> Stats:

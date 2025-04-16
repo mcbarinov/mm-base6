@@ -23,26 +23,28 @@ class PageCBV(BaseView):
             has_proxies_settings=has_proxies_settings,
         )
 
-    @router.get("/dconfigs")
-    async def dconfigs_page(self) -> HTMLResponse:
-        return await self.render.html("dconfigs.j2", info=self.core.system_service.get_dconfig_info())
+    @router.get("/dynamic-configs")
+    async def dynamic_configs(self) -> HTMLResponse:
+        return await self.render.html("dynamic_configs.j2", info=self.core.system_service.get_dynamic_configs_info())
 
-    @router.get("/dconfigs/toml")
-    async def dconfigs_toml_page(self) -> HTMLResponse:
-        return await self.render.html("dconfigs_toml.j2", toml_str=self.core.system_service.export_dconfig_as_toml())
-
-    @router.get("/dconfigs/multiline/{key:str}")
-    async def dconfigs_multiline_page(self, key: str) -> HTMLResponse:
-        return await self.render.html("dconfigs_multiline.j2", dconfig=self.core.dconfig, key=key)
-
-    @router.get("/dvalues")
-    async def dvalues_page(self) -> HTMLResponse:
-        return await self.render.html("dvalues.j2", info=self.core.system_service.get_dvalue_info())
-
-    @router.get("/dvalues/{key:str}")
-    async def update_dvalue_page(self, key: str) -> HTMLResponse:
+    @router.get("/dynamic-configs/toml")
+    async def dynamic_configs_toml(self) -> HTMLResponse:
         return await self.render.html(
-            "dvalues_update.j2", value=self.core.system_service.export_dvalue_field_as_toml(key), key=key
+            "dynamic_configs_toml.j2", toml_str=self.core.system_service.export_dynamic_configs_as_toml()
+        )
+
+    @router.get("/dynamic-configs/multiline/{key:str}")
+    async def dynamic_configs_multiline(self, key: str) -> HTMLResponse:
+        return await self.render.html("dynamic_configs_multiline.j2", key=key)
+
+    @router.get("/dynamic-values")
+    async def dynamic_values(self) -> HTMLResponse:
+        return await self.render.html("dynamic_values.j2", info=self.core.system_service.get_dynamic_values_info())
+
+    @router.get("/dynamic-values/{key:str}")
+    async def update_dynamic_value(self, key: str) -> HTMLResponse:
+        return await self.render.html(
+            "dynamic_values_update.j2", value=self.core.system_service.export_dynamic_value_as_toml(key), key=key
         )
 
     @router.get("/dlogs")
@@ -59,27 +61,27 @@ class PageCBV(BaseView):
 
 @cbv(router)
 class ActionCBV(BaseView):
-    @router.post("/dconfigs")
-    async def update_dconfig(self) -> RedirectResponse:
+    @router.post("/dynamic-configs")
+    async def update_dynamic_configs(self) -> RedirectResponse:
         data = cast(dict[str, str], self.form_data)
-        await self.core.system_service.update_dconfig(data)
-        self.render.flash("dconfigs updated successfully")
-        return redirect("/system/dconfigs")
+        await self.core.system_service.update_dynamic_config(data)
+        self.render.flash("dynamic configs updated successfully")
+        return redirect("/system/dynamic-configs")
 
-    @router.post("/dconfigs/multiline/{key:str}")
-    async def update_dconfig_multiline(self, key: str, value: Annotated[str, Form()]) -> RedirectResponse:
-        await self.core.system_service.update_dconfig({key: value})
-        self.render.flash("dconfig updated successfully")
-        return redirect("/system/dconfigs")
+    @router.post("/dynamic-configs/multiline/{key:str}")
+    async def update_dynamic_config_multiline(self, key: str, value: Annotated[str, Form()]) -> RedirectResponse:
+        await self.core.system_service.update_dynamic_config({key: value})
+        self.render.flash("dynamic config updated successfully")
+        return redirect("/system/dynamic-configs")
 
-    @router.post("/dconfigs/toml")
-    async def update_dconfig_from_toml(self, value: Annotated[str, Form()]) -> RedirectResponse:
-        await self.core.system_service.update_dconfig_from_toml(value)
-        self.render.flash("dconfigs updated successfully")
-        return redirect("/system/dconfigs")
+    @router.post("/dynamic-configs/toml")
+    async def update_dynamic_config_from_toml(self, value: Annotated[str, Form()]) -> RedirectResponse:
+        await self.core.system_service.update_dynamic_configs_from_toml(value)
+        self.render.flash("dynamic configs updated successfully")
+        return redirect("/system/dynamic-configs")
 
-    @router.post("/dvalues/{key:str}")
-    async def update_dvalue(self, key: str, value: Annotated[str, Form()]) -> RedirectResponse:
-        await self.core.system_service.update_dvalue_field(key, value)
-        self.render.flash("dvalue updated successfully")
-        return redirect("/system/dvalues")
+    @router.post("/dynamic-values/{key:str}")
+    async def update_dynamic_value(self, key: str, value: Annotated[str, Form()]) -> RedirectResponse:
+        await self.core.system_service.update_dynamic_value(key, value)
+        self.render.flash("dynamic value updated successfully")
+        return redirect("/system/dynamic-values")

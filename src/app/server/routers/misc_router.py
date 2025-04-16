@@ -47,6 +47,6 @@ class CBV(View):
         text_content = content.decode("utf-8")
         return {"text_content": text_content}
 
-    @router.post("/update-dvalue")
-    async def update_dvalue(self) -> int:
-        return await self.core.misc_service.update_dvalue()
+    @router.post("/update-dynamic-value")
+    async def update_dynamic_value(self) -> int:
+        return await self.core.misc_service.update_dynamic_value()

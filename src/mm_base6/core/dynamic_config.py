@@ -7,15 +7,13 @@ from typing import Any, ClassVar, cast, overload
 from mm_mongo import AsyncMongoCollection
 from mm_std import Result, synchronized, utc_now
 
-from mm_base6.core.db import DConfig, DConfigType
-from mm_base6.core.errors import UnregisteredDConfigError
+from mm_base6.core.db import DynamicConfig, DynamicConfigType
+from mm_base6.core.errors import UnregisteredDynamicConfigError
 from mm_base6.core.types_ import DLOG
 from mm_base6.core.utils import get_registered_public_attributes
 
 
 class DC[T: (str, bool, int, float, Decimal)]:
-    """DC stands for Dynamic Config. It is used to define a dynamic config attribute in a dconfig_settings class."""
-
     _counter = itertools.count()
 
     def __init__(self, value: T, description: str = "", hide: bool = False) -> None:
@@ -33,44 +31,44 @@ class DC[T: (str, bool, int, float, Decimal)]:
     def __get__(self, obj: object, obj_type: type | None = None) -> T | DC[T]:
         if obj is None:
             return self
-        return cast(T, getattr(DConfigStorage.storage, self.key))
+        return cast(T, getattr(DynamicConfigStorage.storage, self.key))
 
     def __set_name__(self, owner: object, name: str) -> None:
         self.key = name
 
 
-class DConfigModel:
+class DynamicConfigsModel:
     pass
 
 
-class DConfigDict(dict[str, object]):
+class DynamicConfigDict(dict[str, object]):
     def __getattr__(self, item: str) -> object:
         if item not in self:
-            raise UnregisteredDConfigError(item)
+            raise UnregisteredDynamicConfigError(item)
 
         return self.get(item, None)
 
 
-class DConfigStorage:
-    storage = DConfigDict()
+class DynamicConfigStorage:
+    storage = DynamicConfigDict()
     descriptions: ClassVar[dict[str, str]] = {}
-    types: ClassVar[dict[str, DConfigType]] = {}
+    types: ClassVar[dict[str, DynamicConfigType]] = {}
     hidden: ClassVar[set[str]] = set()
-    collection: AsyncMongoCollection[str, DConfig]
+    collection: AsyncMongoCollection[str, DynamicConfig]
     dlog: DLOG
 
     @classmethod
     @synchronized
-    async def init_storage[DCONFIG: DConfigModel](
+    async def init_storage[DYNAMIC_CONFIGS: DynamicConfigsModel](
         cls,
-        collection: AsyncMongoCollection[str, DConfig],
-        dconfig_settings: type[DCONFIG],
+        collection: AsyncMongoCollection[str, DynamicConfig],
+        dynamic_configs: type[DYNAMIC_CONFIGS],
         dlog: DLOG,
-    ) -> DCONFIG:
+    ) -> DYNAMIC_CONFIGS:
         cls.collection = collection
         cls.dlog = dlog
 
-        for attr in get_attrs(dconfig_settings):
+        for attr in get_attrs(dynamic_configs):
             type_ = get_type(attr.value)
             cls.descriptions[attr.key] = attr.description
             cls.types[attr.key] = type_
@@ -84,14 +82,14 @@ class DConfigStorage:
                 if typed_value_res.is_ok():
                     cls.storage[attr.key] = typed_value_res.unwrap()
                 else:
-                    await dlog("dconfig.get_typed_value", {"error": typed_value_res.unwrap_error(), "attr": attr.key})
+                    await dlog("dynamic_config.get_typed_value", {"error": typed_value_res.unwrap_error(), "attr": attr.key})
             else:  # create rows if not exists
-                await collection.insert_one(DConfig(id=attr.key, type=type_, value=get_str_value(type_, attr.value)))
+                await collection.insert_one(DynamicConfig(id=attr.key, type=type_, value=get_str_value(type_, attr.value)))
                 cls.storage[attr.key] = attr.value
 
-        # remove rows which not in settings.DCONFIG
-        await collection.delete_many({"_id": {"$nin": get_registered_public_attributes(dconfig_settings)}})
-        return cast(DCONFIG, cls.storage)
+        # remove rows which not in DYNAMIC_CONFIGS
+        await collection.delete_many({"_id": {"$nin": get_registered_public_attributes(dynamic_configs)}})
+        return cast(DYNAMIC_CONFIGS, cls.storage)
 
     @classmethod
     async def update(cls, data: dict[str, str]) -> bool:
@@ -105,10 +103,10 @@ class DConfigStorage:
                     await cls.collection.set(key, {"value": str_value, "updated_at": utc_now()})
                     cls.storage[key] = type_value_res.unwrap()
                 else:
-                    await cls.dlog("DConfigStorage.update", {"error": type_value_res.unwrap_error(), "key": key})
+                    await cls.dlog("DynamicConfigStorage.update", {"error": type_value_res.unwrap_error(), "key": key})
                     result = False
             else:
-                await cls.dlog("DConfigStorage.update", {"error": "unknown key", "key": key})
+                await cls.dlog("DynamicConfigStorage.update", {"error": "unknown key", "key": key})
                 result = False
         return result
 
@@ -117,55 +115,55 @@ class DConfigStorage:
         return cls.storage.keys() - cls.hidden
 
     @classmethod
-    def get_type(cls, key: str) -> DConfigType:
+    def get_type(cls, key: str) -> DynamicConfigType:
         return cls.types[key]
 
 
-def get_type(value: object) -> DConfigType:
+def get_type(value: object) -> DynamicConfigType:
     if isinstance(value, bool):
-        return DConfigType.BOOLEAN
+        return DynamicConfigType.BOOLEAN
     if isinstance(value, str):
-        return DConfigType.MULTILINE if "\n" in value else DConfigType.STRING
+        return DynamicConfigType.MULTILINE if "\n" in value else DynamicConfigType.STRING
     if isinstance(value, Decimal):
-        return DConfigType.DECIMAL
+        return DynamicConfigType.DECIMAL
     if isinstance(value, int):
-        return DConfigType.INTEGER
+        return DynamicConfigType.INTEGER
     if isinstance(value, float):
-        return DConfigType.FLOAT
+        return DynamicConfigType.FLOAT
     raise ValueError(f"unsupported type: {type(value)}")
 
 
-def get_typed_value(type_: DConfigType, str_value: str) -> Result[Any]:
+def get_typed_value(type_: DynamicConfigType, str_value: str) -> Result[Any]:
     try:
-        if type_ == DConfigType.BOOLEAN:
+        if type_ == DynamicConfigType.BOOLEAN:
             return Result.success(str_value.lower() == "true")
-        if type_ == DConfigType.INTEGER:
+        if type_ == DynamicConfigType.INTEGER:
             return Result.success(int(str_value))
-        if type_ == DConfigType.FLOAT:
+        if type_ == DynamicConfigType.FLOAT:
             return Result.success(float(str_value))
-        if type_ == DConfigType.DECIMAL:
+        if type_ == DynamicConfigType.DECIMAL:
             return Result.success(Decimal(str_value))
-        if type_ == DConfigType.STRING:
+        if type_ == DynamicConfigType.STRING:
             return Result.success(str_value)
-        if type_ == DConfigType.MULTILINE:
+        if type_ == DynamicConfigType.MULTILINE:
             return Result.success(str_value.replace("\r", ""))
         return Result.failure(f"unsupported type: {type_}")
     except Exception as e:
         return Result.failure_with_exception(e)
 
 
-def get_str_value(type_: DConfigType, value: object) -> str:
-    if type_ is DConfigType.BOOLEAN:
+def get_str_value(type_: DynamicConfigType, value: object) -> str:
+    if type_ is DynamicConfigType.BOOLEAN:
         return "True" if value else ""
     return str(value)
 
 
 # noinspection DuplicatedCode
-def get_attrs(dconfig_settings: type[DConfigModel]) -> list[DC[Any]]:
+def get_attrs(dynamic_configs: type[DynamicConfigsModel]) -> list[DC[Any]]:
     attrs: list[DC[Any]] = []
-    keys = get_registered_public_attributes(dconfig_settings)
+    keys = get_registered_public_attributes(dynamic_configs)
     for key in keys:
-        field = getattr(dconfig_settings, key)
+        field = getattr(dynamic_configs, key)
         if isinstance(field, DC):
             attrs.append(field)
     attrs.sort(key=lambda x: x.order)

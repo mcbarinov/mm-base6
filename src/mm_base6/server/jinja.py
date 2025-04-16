@@ -48,8 +48,8 @@ def init_env(core: BaseCoreAny, server_config: ServerConfig, jinja_config: Jinja
     custom_globals: dict[str, Any] = {
         "core_config": core.core_config,
         "server_config": server_config,
-        "dconfig": core.dconfig,
-        "dvalue": core.dvalue,
+        "dynamic_configs": core.dynamic_configs,
+        "dynamic_values": core.dynamic_values,
         "confirm": Markup(""" onclick="return confirm('sure?')" """),
         "header_info": partial(header_info, core),
         "footer_info": partial(footer_info, core),

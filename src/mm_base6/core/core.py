@@ -14,36 +14,36 @@ from pymongo import AsyncMongoClient
 
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb, DLog
-from mm_base6.core.dconfig import DConfigModel, DConfigStorage
-from mm_base6.core.dvalue import DValueModel, DValueStorage
+from mm_base6.core.dynamic_config import DynamicConfigsModel, DynamicConfigStorage
+from mm_base6.core.dynamic_value import DynamicValuesModel, DynamicValueStorage
 from mm_base6.core.logger import configure_logging
 from mm_base6.core.system_service import SystemService
 from mm_base6.core.types_ import DLOG
 
-DCONFIG_co = TypeVar("DCONFIG_co", bound=DConfigModel, covariant=True)
-DVALUE_co = TypeVar("DVALUE_co", bound=DValueModel, covariant=True)
+DYNAMIC_CONFIGS_co = TypeVar("DYNAMIC_CONFIGS_co", bound=DynamicConfigsModel, covariant=True)
+DYNAMIC_VALUES_co = TypeVar("DYNAMIC_VALUES_co", bound=DynamicValuesModel, covariant=True)
 DB_co = TypeVar("DB_co", bound=BaseDb, covariant=True)
 
 
-DCONFIG = TypeVar("DCONFIG", bound=DConfigModel)
-DVALUE = TypeVar("DVALUE", bound=DValueModel)
+DYNAMIC_CONFIGS = TypeVar("DYNAMIC_CONFIGS", bound=DynamicConfigsModel)
+DYNAMIC_VALUES = TypeVar("DYNAMIC_VALUES", bound=DynamicValuesModel)
 DB = TypeVar("DB", bound=BaseDb)
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
+class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
     core_config: CoreConfig
     scheduler: AsyncScheduler
     mongo_client: AsyncMongoClient[Any]
     database: AsyncDatabaseAny
     db: DB_co
-    dconfig: DCONFIG_co
-    dvalue: DVALUE_co
+    dynamic_configs: DYNAMIC_CONFIGS_co
+    dynamic_values: DYNAMIC_VALUES_co
     system_service: SystemService
 
-    def __new__(cls, *_args: object, **_kwargs: object) -> BaseCore[DCONFIG_co, DVALUE_co, DB_co]:
+    def __new__(cls, *_args: object, **_kwargs: object) -> BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]:
         raise TypeError("Use `BaseCore.init()` instead of direct instantiation.")
 
     @classmethod
@@ -55,9 +55,9 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
     async def base_init(
         cls,
         core_config: CoreConfig,
-        dconfig_settings: type[DCONFIG_co],
-        dvalue_settings: type[DVALUE_co],
-        db_settings: type[DB_co],
+        dynamic_configs_cls: type[DYNAMIC_CONFIGS_co],
+        dynamic_values_cls: type[DYNAMIC_VALUES_co],
+        db_cls: type[DB_co],
     ) -> Self:
         configure_logging(core_config.debug, core_config.data_dir)
         inst = super().__new__(cls)
@@ -66,12 +66,12 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         conn = AsyncMongoConnection(inst.core_config.database_url)
         inst.mongo_client = conn.client
         inst.database = conn.database
-        inst.db = await db_settings.init_collections(conn.database)
+        inst.db = await db_cls.init_collections(conn.database)
 
         inst.system_service = SystemService(core_config, inst.db, inst.scheduler)
 
-        inst.dconfig = await DConfigStorage.init_storage(inst.db.dconfig, dconfig_settings, inst.dlog)
-        inst.dvalue = await DValueStorage.init_storage(inst.db.dvalue, dvalue_settings)
+        inst.dynamic_configs = await DynamicConfigStorage.init_storage(inst.db.dynamic_config, dynamic_configs_cls, inst.dlog)
+        inst.dynamic_values = await DynamicValueStorage.init_storage(inst.db.dynamic_value, dynamic_values_cls)
 
         return inst
 
@@ -108,11 +108,11 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         await self.db.dlog.insert_one(DLog(id=ObjectId(), category=category, data=data))
 
     @property
-    def base_service_params(self) -> BaseServiceParams[DCONFIG_co, DVALUE_co, DB_co]:
+    def base_service_params(self) -> BaseServiceParams[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]:
         return BaseServiceParams(
             core_config=self.core_config,
-            dconfig=self.dconfig,
-            dvalue=self.dvalue,
+            dynamic_configs=self.dynamic_configs,
+            dynamic_values=self.dynamic_values,
             db=self.db,
             dlog=self.dlog,
             send_telegram_message=self.system_service.send_telegram_message,
@@ -131,24 +131,24 @@ class BaseCore(Generic[DCONFIG_co, DVALUE_co, DB_co], ABC):
         pass
 
 
-type BaseCoreAny = BaseCore[DConfigModel, DValueModel, BaseDb]
+type BaseCoreAny = BaseCore[DynamicConfigsModel, DynamicValuesModel, BaseDb]
 
 
 @dataclass
-class BaseServiceParams(Generic[DCONFIG, DVALUE, DB]):
+class BaseServiceParams(Generic[DYNAMIC_CONFIGS, DYNAMIC_VALUES, DB]):
     core_config: CoreConfig
-    dconfig: DCONFIG
-    dvalue: DVALUE
+    dynamic_configs: DYNAMIC_CONFIGS
+    dynamic_values: DYNAMIC_VALUES
     db: DB
     dlog: DLOG
     send_telegram_message: Callable[[str], Coroutine[Any, Any, Result[list[int]]]]
 
 
-class BaseService(Generic[DCONFIG_co, DVALUE_co, DB_co]):
-    def __init__(self, base_params: BaseServiceParams[DCONFIG_co, DVALUE_co, DB_co]) -> None:
+class BaseService(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]):
+    def __init__(self, base_params: BaseServiceParams[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]) -> None:
         self.core_config = base_params.core_config
-        self.dconfig: DCONFIG_co = base_params.dconfig
-        self.dvalue: DVALUE_co = base_params.dvalue
+        self.dynamic_configs: DYNAMIC_CONFIGS_co = base_params.dynamic_configs
+        self.dynamic_values: DYNAMIC_VALUES_co = base_params.dynamic_values
         self.db = base_params.db
         self.dlog = base_params.dlog
         self.send_telegram_message = base_params.send_telegram_message

@@ -4,10 +4,10 @@ from .core.core import BaseCoreAny as BaseCoreAny
 from .core.core import BaseService as BaseService
 from .core.core import BaseServiceParams as BaseServiceParams
 from .core.db import BaseDb as BaseDb
-from .core.dconfig import DC as DC
-from .core.dconfig import DConfigModel as DConfigModel
-from .core.dvalue import DV as DV
-from .core.dvalue import DValueModel as DValueModel
+from .core.dynamic_config import DC as DC
+from .core.dynamic_config import DynamicConfigsModel as DynamicConfigsModel
+from .core.dynamic_value import DV as DV
+from .core.dynamic_value import DynamicValuesModel as DynamicValuesModel
 from .core.errors import UserError as UserError
 from .server.cbv import cbv as cbv
 from .server.config import ServerConfig as ServerConfig

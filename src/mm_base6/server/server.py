@@ -17,7 +17,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Lifespan
 
 from mm_base6 import CoreConfig, ServerConfig
-from mm_base6.core.core import BaseCore, DB_co, DCONFIG_co, DVALUE_co
+from mm_base6.core.core import BaseCore, DB_co, DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co
 from mm_base6.core.errors import UserError
 from mm_base6.server import utils
 from mm_base6.server.jinja import JinjaConfig, init_env
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def init_server(
-    core: BaseCore[DCONFIG_co, DVALUE_co, DB_co],
+    core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co],
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
     router: APIRouter,
@@ -52,7 +52,10 @@ def init_server(
 
 # noinspection PyUnresolvedReferences
 def configure_state(
-    app: FastAPI, core: BaseCore[DCONFIG_co, DVALUE_co, DB_co], server_config: ServerConfig, jinja_env: Environment
+    app: FastAPI,
+    core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co],
+    server_config: ServerConfig,
+    jinja_env: Environment,
 ) -> None:
     app.state.core = core
     app.state.jinja_env = jinja_env
@@ -99,7 +102,7 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
         return PlainTextResponse(message, status_code=500)
 
 
-def configure_lifespan(core: BaseCore[DCONFIG_co, DVALUE_co, DB_co]) -> Lifespan[AppType]:
+def configure_lifespan(core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]) -> Lifespan[AppType]:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: UP043
         try:

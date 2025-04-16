@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 @unique
-class DConfigType(str, Enum):
+class DynamicConfigType(str, Enum):
     STRING = "STRING"
     MULTILINE = "MULTILINE"
     DATETIME = "DATETIME"
@@ -19,13 +19,13 @@ class DConfigType(str, Enum):
     DECIMAL = "DECIMAL"
 
 
-class DConfig(MongoModel[str]):
-    type: DConfigType
+class DynamicConfig(MongoModel[str]):
+    type: DynamicConfigType
     value: str
     updated_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "dconfig"
+    __collection__: str = "dynamic_config"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["type", "value", "updated_at", "created_at"],
@@ -41,12 +41,12 @@ class DConfig(MongoModel[str]):
     }
 
 
-class DValue(MongoModel[str]):
+class DynamicValue(MongoModel[str]):
     value: str
     updated_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "dvalue"
+    __collection__: str = "dynamic_value"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["value", "updated_at", "created_at"],
@@ -85,8 +85,8 @@ class DLog(MongoModel[ObjectId]):
 class BaseDb(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     dlog: AsyncMongoCollection[ObjectId, DLog]
-    dconfig: AsyncMongoCollection[str, DConfig]
-    dvalue: AsyncMongoCollection[str, DValue]
+    dynamic_config: AsyncMongoCollection[str, DynamicConfig]
+    dynamic_value: AsyncMongoCollection[str, DynamicValue]
 
     database: AsyncDatabaseAny
 

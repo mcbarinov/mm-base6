@@ -9,8 +9,8 @@ from typing import Any, ClassVar, cast, overload
 from mm_mongo import AsyncMongoCollection
 from mm_std import synchronized, utc_now
 
-from mm_base6.core.db import DValue
-from mm_base6.core.errors import UnregisteredDValueError
+from mm_base6.core.db import DynamicValue
+from mm_base6.core.errors import UnregisteredDynamicValueError
 from mm_base6.core.utils import get_registered_public_attributes
 
 
@@ -32,60 +32,60 @@ class DV[T]:
     def __get__(self, obj: object | None, obj_type: type | None = None) -> T | DV[T]:
         if obj is None:
             return self
-        return cast(T, getattr(DValueStorage.storage, self.key))
+        return cast(T, getattr(DynamicValueStorage.storage, self.key))
 
     def __set__(self, instance: object, value: T) -> None:
-        setattr(DValueStorage.storage, self.key, value)
+        setattr(DynamicValueStorage.storage, self.key, value)
 
     def __set_name__(self, owner: object, name: str) -> None:
         self.key = name
 
 
-class DValueModel:
+class DynamicValuesModel:
     pass
 
 
-class DValueDict(dict[str, object]):
+class DynamicValueDict(dict[str, object]):
     def __getattr__(self, item: str) -> object:
         if item not in self:
-            raise UnregisteredDValueError(item)
+            raise UnregisteredDynamicValueError(item)
         return self.get(item)
 
     def __setattr__(self, key: str, value: object) -> None:
         if key not in self:
-            raise UnregisteredDValueError(key)
-        if DValueStorage.persistent[key]:
-            asyncio.create_task(DValueStorage.update_persistent_value(key, value))  # TODO: is it OK? # noqa: RUF006
+            raise UnregisteredDynamicValueError(key)
+        if DynamicValueStorage.persistent[key]:
+            asyncio.create_task(DynamicValueStorage.update_persistent_value(key, value))  # TODO: is it OK? # noqa: RUF006
         self[key] = value
 
 
-class DValueStorage:
-    storage = DValueDict()
+class DynamicValueStorage:
+    storage = DynamicValueDict()
     persistent: ClassVar[dict[str, bool]] = {}
     descriptions: ClassVar[dict[str, str]] = {}
-    collection: AsyncMongoCollection[str, DValue]
+    collection: AsyncMongoCollection[str, DynamicValue]
 
     @classmethod
     @synchronized
-    async def init_storage[DVALUE: DValueModel](
-        cls, collection: AsyncMongoCollection[str, DValue], dvalue_settings: type[DVALUE]
-    ) -> DVALUE:
+    async def init_storage[DYNAMIC_VALUES: DynamicValuesModel](
+        cls, collection: AsyncMongoCollection[str, DynamicValue], dynamic_values: type[DYNAMIC_VALUES]
+    ) -> DYNAMIC_VALUES:
         cls.collection = collection
         persistent_keys = []
 
-        for attr in get_attrs(dvalue_settings):
+        for attr in get_attrs(dynamic_values):
             value = attr.value
             # get value from db if exists
             if attr.persistent:
                 persistent_keys.append(attr.key)
-                dvalue_from_db = await collection.get_or_none(attr.key)
-                if dvalue_from_db:
-                    value = decode_value(dvalue_from_db.value)
+                dynamic_value_from_db = await collection.get_or_none(attr.key)
+                if dynamic_value_from_db:
+                    value = decode_value(dynamic_value_from_db.value)
             await cls.init_value(attr.key, value, attr.description, attr.persistent)
 
         # remove rows which not in persistent_keys
         await collection.delete_many({"_id": {"$nin": persistent_keys}})
-        return cast(DVALUE, cls.storage)
+        return cast(DYNAMIC_VALUES, cls.storage)
 
     @classmethod
     async def init_value(cls, key: str, value: object, description: str, persistent: bool) -> None:
@@ -94,7 +94,7 @@ class DValueStorage:
         cls.storage[key] = value
         if persistent:
             if not await cls.collection.exists({"_id": key}):
-                await cls.collection.insert_one(DValue(id=key, value=encode_value(value)))
+                await cls.collection.insert_one(DynamicValue(id=key, value=encode_value(value)))
             else:
                 await cls.update_persistent_value(key, value)
 
@@ -117,12 +117,11 @@ def decode_value(value: str) -> object:
     return pickle.loads(base64.b64decode(value))  # noqa: S301 # nosec
 
 
-# noinspection DuplicatedCode
-def get_attrs(dconfig_settings: type[DValueModel]) -> list[DV[Any]]:
+def get_attrs(dynamic_values: type[DynamicValuesModel]) -> list[DV[Any]]:
     attrs: list[DV[Any]] = []
-    keys = get_registered_public_attributes(dconfig_settings)
+    keys = get_registered_public_attributes(dynamic_values)
     for key in keys:
-        field = getattr(dconfig_settings, key)
+        field = getattr(dynamic_values, key)
         if isinstance(field, DV):
             attrs.append(field)
     attrs.sort(key=lambda x: x.order)
