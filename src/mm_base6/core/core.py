@@ -9,7 +9,7 @@ from typing import Any, Generic, Self, TypeVar
 
 from bson import ObjectId
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
-from mm_std import AsyncScheduler, Err, Ok, synchronized
+from mm_std import AsyncScheduler, Result, synchronized
 from pymongo import AsyncMongoClient
 
 from mm_base6.core.config import CoreConfig
@@ -141,7 +141,7 @@ class BaseServiceParams(Generic[DCONFIG, DVALUE, DB]):
     dvalue: DVALUE
     db: DB
     dlog: DLOG
-    send_telegram_message: Callable[[str], Coroutine[Any, Any, Ok[list[int]] | Err]]
+    send_telegram_message: Callable[[str], Coroutine[Any, Any, Result[list[int]]]]
 
 
 class BaseService(Generic[DCONFIG_co, DVALUE_co, DB_co]):

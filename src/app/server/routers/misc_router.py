@@ -4,7 +4,7 @@ import time
 from typing import Annotated
 
 from fastapi import APIRouter, File, UploadFile
-from mm_std import Err, Ok, Result
+from mm_std import Result
 
 from app.server.deps import View
 from mm_base6 import UserError, cbv
@@ -35,11 +35,11 @@ class CBV(View):
 
     @router.get("/result-ok")
     async def result_ok(self) -> Result[str]:
-        return Ok("it works")
+        return Result.success("it works")
 
     @router.get("/result-err")
     async def result_err(self) -> Result[str]:
-        return Err("bla bla", data=["ssss", 123])
+        return Result.failure("bla bla", extra={"logs": ["ssss", 123]})
 
     @router.post("/upload")
     async def upload(self, file: Annotated[UploadFile, File()]) -> dict[str, str]:

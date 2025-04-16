@@ -609,13 +609,14 @@ wheels = [
 
 [[package]]
 name = "mm-base6"
-version = "0.0.18"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "itsdangerous" },
     { name = "mm-jinja" },
     { name = "mm-mongo" },
+    { name = "mm-std" },
     { name = "mm-telegram" },
     { name = "psutil" },
     { name = "uvloop" },
@@ -639,8 +640,9 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.12" },
     { name = "itsdangerous", specifier = "~=2.2.0" },
     { name = "mm-jinja", specifier = "~=0.0.5" },
-    { name = "mm-mongo", specifier = ">=0.4.6" },
-    { name = "mm-telegram", specifier = "~=0.0.8" },
+    { name = "mm-mongo", specifier = ">=0.5.0" },
+    { name = "mm-std", specifier = ">=0.4.1" },
+    { name = "mm-telegram", specifier = "~=0.1.0" },
     { name = "psutil", specifier = "~=7.0.0" },
     { name = "uvloop", specifier = "~=0.21.0" },
 ]
@@ -671,19 +673,19 @@ wheels = [
 
 [[package]]
 name = "mm-mongo"
-version = "0.4.6"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mm-std" },
     { name = "pymongo" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/5e/a379db376035be7004cd70d95348848b73bc15c3e40f001b6949c439f760/mm_mongo-0.4.6-py3-none-any.whl", hash = "sha256:856ce98353760fb411937c59566897cd2c32a9ed772fba016a1c64a321721a91", size = 8851 },
+    { url = "https://files.pythonhosted.org/packages/d3/29/3d11ffa6dd179684351be2105b905554e543728981b7a8908848e8d08d21/mm_mongo-0.5.0-py3-none-any.whl", hash = "sha256:633c2a73811edfeaaf5a7607530714227ad2bc3524e2ac5e247e9950910f3d6c", size = 8827 },
 ]
 
 [[package]]
 name = "mm-std"
-version = "0.3.30"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -699,18 +701,18 @@ dependencies = [
     { name = "tomlkit" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/44/639f0d9b9663c7a8357b13668c31dfbf3b0e0c7aa617f072757a1b53ecbc/mm_std-0.3.30-py3-none-any.whl", hash = "sha256:2ea26c9f3850fc47ba4873bebb3ffaa17c0b1d991f7c7d890f688e0e76730dbc", size = 26624 },
+    { url = "https://files.pythonhosted.org/packages/82/f3/5bc5a91a761b09ae2b718f64702428c9540f29ec8a3dfce9f412be1627f8/mm_std-0.4.1-py3-none-any.whl", hash = "sha256:fef376714a67476b3af4ed9584e6223ba7a452b4cfecbe68ca1371b99cedf744", size = 23278 },
 ]
 
 [[package]]
 name = "mm-telegram"
-version = "0.0.8"
+version = "0.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mm-std" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/2c/9ce5e443e8d7a725d3b9aed0e7c16e252146ddaec0511e08eaf3777817b8/mm_telegram-0.0.8-py3-none-any.whl", hash = "sha256:d51b9fd620a4003351522f136a231cae40d215e603bc4221d394755a469e0005", size = 1908 },
+    { url = "https://files.pythonhosted.org/packages/6a/0e/7a61de50b1bec0ebce6145d8aea46c79ba2b92640b47fa3f03f37533fe3b/mm_telegram-0.1.0-py3-none-any.whl", hash = "sha256:c5baa26a2ca9fb6f65638dc4d2b48517ef62138c698fec77fb9d0950a6ea2aa2", size = 1864 },
 ]
 
 [[package]]

@@ -13,7 +13,7 @@ import mm_telegram
 import psutil
 import pydash
 from bson import ObjectId
-from mm_std import AsyncScheduler, Err, Result, hra, synchronized, toml_dumps, toml_loads, utc_now
+from mm_std import AsyncScheduler, Result, http_request, synchronized, toml_dumps, toml_loads, utc_now
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig
@@ -161,13 +161,13 @@ class SystemService:
     async def send_telegram_message(self, message: str) -> Result[list[int]]:
         # TODO: run it in a separate thread
         if not self.has_telegram_settings():
-            return Err("telegram token or chat_id is not set")
+            return Result.failure("telegram token or chat_id is not set")
         token = cast(str, DConfigStorage.storage.get("telegram_token"))
         chat_id = cast(int, DConfigStorage.storage.get("telegram_chat_id"))
-        res = await mm_telegram.async_send_message(token, chat_id, message)
-        if res.is_err():
-            await self.dlog("send_telegram_message", {"error": res.err, "message": message, "data": res.data})
-            logger.error("send_telegram_message error: %s", res.err)
+        res = await mm_telegram.send_message(token, chat_id, message)
+        if res.is_error():
+            await self.dlog("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
+            logger.error("send_telegram_message error: %s", res.unwrap_error())
         return res
 
     def has_proxies_settings(self) -> bool:
@@ -180,11 +180,11 @@ class SystemService:
     @synchronized
     async def update_proxies(self) -> int | None:
         proxies_url = cast(str, DConfigStorage.storage.get("proxies_url"))
-        res = await hra(proxies_url)
+        res = await http_request(proxies_url)
         if res.is_error():
             await self.dlog("update_proxies", {"error": res.error})
             return -1
-        proxies = res.body.strip().splitlines()
+        proxies = (res.body or "").strip().splitlines()
         proxies = [p.strip() for p in proxies if p.strip()]
         await DValueStorage.update_value("proxies", proxies)
         await DValueStorage.update_value("proxies_updated_at", utc_now())

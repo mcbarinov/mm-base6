@@ -5,9 +5,8 @@ from decimal import Decimal
 from typing import Any, ClassVar, cast, overload
 
 from mm_mongo import AsyncMongoCollection
-from mm_std import Err, Ok, Result, synchronized, utc_now
+from mm_std import Result, synchronized, utc_now
 
-# from mm_base6.core.core import DLOG
 from mm_base6.core.db import DConfig, DConfigType
 from mm_base6.core.errors import UnregisteredDConfigError
 from mm_base6.core.types_ import DLOG
@@ -81,10 +80,11 @@ class DConfigStorage:
             dv = await collection.get_or_none(attr.key)
             if dv:
                 typed_value_res = get_typed_value(dv.type, dv.value)
-                if isinstance(typed_value_res, Ok):
-                    cls.storage[attr.key] = typed_value_res.ok
+                # if isinstance(typed_value_res, Ok):
+                if typed_value_res.is_ok():
+                    cls.storage[attr.key] = typed_value_res.unwrap()
                 else:
-                    await dlog("dconfig.get_typed_value", {"error": typed_value_res.err, "attr": attr.key})
+                    await dlog("dconfig.get_typed_value", {"error": typed_value_res.unwrap_error(), "attr": attr.key})
             else:  # create rows if not exists
                 await collection.insert_one(DConfig(id=attr.key, type=type_, value=get_str_value(type_, attr.value)))
                 cls.storage[attr.key] = attr.value
@@ -101,11 +101,11 @@ class DConfigStorage:
                 str_value = data.get(key) or ""  # for BOOLEAN type (checkbox)
                 str_value = str_value.replace("\r", "")  # for MULTILINE (textarea do it)
                 type_value_res = get_typed_value(cls.types[key], str_value.strip())
-                if isinstance(type_value_res, Ok):
+                if type_value_res.is_ok():
                     await cls.collection.set(key, {"value": str_value, "updated_at": utc_now()})
-                    cls.storage[key] = type_value_res.ok
+                    cls.storage[key] = type_value_res.unwrap()
                 else:
-                    await cls.dlog("DConfigStorage.update", {"error": type_value_res.err, "key": key})
+                    await cls.dlog("DConfigStorage.update", {"error": type_value_res.unwrap_error(), "key": key})
                     result = False
             else:
                 await cls.dlog("DConfigStorage.update", {"error": "unknown key", "key": key})
@@ -138,20 +138,20 @@ def get_type(value: object) -> DConfigType:
 def get_typed_value(type_: DConfigType, str_value: str) -> Result[Any]:
     try:
         if type_ == DConfigType.BOOLEAN:
-            return Ok(str_value.lower() == "true")
+            return Result.success(str_value.lower() == "true")
         if type_ == DConfigType.INTEGER:
-            return Ok(int(str_value))
+            return Result.success(int(str_value))
         if type_ == DConfigType.FLOAT:
-            return Ok(float(str_value))
+            return Result.success(float(str_value))
         if type_ == DConfigType.DECIMAL:
-            return Ok(Decimal(str_value))
+            return Result.success(Decimal(str_value))
         if type_ == DConfigType.STRING:
-            return Ok(str_value)
+            return Result.success(str_value)
         if type_ == DConfigType.MULTILINE:
-            return Ok(str_value.replace("\r", ""))
-        return Err(f"unsupported type: {type_}")
+            return Result.success(str_value.replace("\r", ""))
+        return Result.failure(f"unsupported type: {type_}")
     except Exception as e:
-        return Err(str(e))
+        return Result.failure_with_exception(e)
 
 
 def get_str_value(type_: DConfigType, value: object) -> str:

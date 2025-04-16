@@ -1,16 +1,17 @@
 [project]
 name = "mm-base6"
-version = "0.0.18"
+version = "0.1.0"
 description = ""
 requires-python = ">=3.12"
 dependencies = [
-    "mm-mongo>=0.4.6",
+    "mm-mongo>=0.5.0",
     "mm-jinja~=0.0.5",
-    "mm-telegram~=0.0.8",
+    "mm-telegram~=0.1.0",
     "fastapi[standard]>=0.115.12",
     "itsdangerous~=2.2.0",
     "uvloop~=0.21.0",
     "psutil~=7.0.0",
+    "mm-std>=0.4.1",
 ]
 
 [build-system]
