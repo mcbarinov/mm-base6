@@ -32,5 +32,10 @@ publish: build
     uvx twine upload dist/**
     git tag -a 'v{{version}}' -m 'v{{version}}' && git push origin v{{version}}
 
+
+demo:
+    rm -rf demo/src/app
+    cp -r src/app demo/src
+
 dev:
     uv run python -m watchfiles "python -m app.main" src

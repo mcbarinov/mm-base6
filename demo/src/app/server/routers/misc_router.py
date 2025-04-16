@@ -4,10 +4,10 @@ import time
 from typing import Annotated
 
 from fastapi import APIRouter, File, UploadFile
-from mm_base6 import UserError, cbv
-from mm_std import Err, Ok, Result
+from mm_std import Result
 
 from app.server.deps import View
+from mm_base6 import UserError, cbv
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,11 @@ class CBV(View):
 
     @router.get("/result-ok")
     async def result_ok(self) -> Result[str]:
-        return Ok("it works")
+        return Result.success("it works")
 
     @router.get("/result-err")
     async def result_err(self) -> Result[str]:
-        return Err("bla bla", data=["ssss", 123])
+        return Result.failure("bla bla", extra={"logs": ["ssss", 123]})
 
     @router.post("/upload")
     async def upload(self, file: Annotated[UploadFile, File()]) -> dict[str, str]:
@@ -47,6 +47,6 @@ class CBV(View):
         text_content = content.decode("utf-8")
         return {"text_content": text_content}
 
-    @router.post("/update-dvalue")
-    async def update_dvalue(self) -> int:
-        return await self.core.misc_service.update_dvalue()
+    @router.post("/update-dynamic-value")
+    async def update_dynamic_value(self) -> int:
+        return await self.core.misc_service.update_dynamic_value()

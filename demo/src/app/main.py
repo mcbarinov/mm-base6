@@ -1,8 +1,7 @@
-from mm_base6 import run
-
 from app import settings
 from app.core.core import Core
 from app.server import jinja
+from mm_base6 import run
 
 run(
     core_config=settings.core_config,

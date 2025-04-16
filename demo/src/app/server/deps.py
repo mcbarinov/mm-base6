@@ -1,10 +1,10 @@
 from typing import cast
 
 from fastapi import Depends
-from mm_base6 import BaseView
 from starlette.requests import Request
 
 from app.core.core import Core
+from mm_base6 import BaseView
 
 
 def get_core(request: Request) -> Core:

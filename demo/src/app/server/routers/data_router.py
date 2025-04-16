@@ -1,10 +1,10 @@
 from bson import ObjectId
 from fastapi import APIRouter
-from mm_base6 import cbv
 from mm_mongo import MongoDeleteResult, MongoInsertManyResult, MongoInsertOneResult, MongoUpdateResult
 
 from app.core.db import Data
 from app.server.deps import View
+from mm_base6 import cbv
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
