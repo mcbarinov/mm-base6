@@ -5,6 +5,70 @@ from pathlib import Path
 from rich.logging import RichHandler
 
 
+class CustomRichHandler(RichHandler):
+    def emit(self, record: logging.LogRecord) -> None:
+        # Only handle exceptions with extras
+        if record.exc_info and record.exc_info != (None, None, None):
+            # Extract extra fields
+            extras = {
+                key: value
+                for key, value in record.__dict__.items()
+                if key not in logging.LogRecord.__dict__
+                and key
+                not in (
+                    "name",
+                    "msg",
+                    "args",
+                    "levelname",
+                    "levelno",
+                    "pathname",
+                    "filename",
+                    "module",
+                    "exc_info",
+                    "exc_text",
+                    "stack_info",
+                    "lineno",
+                    "funcName",
+                    "created",
+                    "msecs",
+                    "relativeCreated",
+                    "thread",
+                    "threadName",
+                    "processName",
+                    "process",
+                    "message",
+                    "taskName",
+                    "asctime",
+                )
+            }
+
+            if extras:
+                # Store original state
+                original_msg = record.msg
+                has_message = hasattr(record, "message")
+                original_message = record.message if has_message else None
+
+                # Add extras to the message
+                extras_str = " | " + " ".join(f"{k}={v}" for k, v in extras.items())
+                record.msg = f"{record.msg}{extras_str}"
+
+                # Clear cached message so it will be regenerated
+                if has_message:
+                    delattr(record, "message")
+
+                try:
+                    super().emit(record)
+                finally:
+                    # Restore original state
+                    record.msg = original_msg
+                    if has_message:
+                        record.message = original_message  # type: ignore[assignment]
+                return
+
+        # Normal processing for non-exception logs
+        super().emit(record)
+
+
 class ExtraFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         base = super().format(record)
@@ -58,7 +122,7 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
 
     console_handler: logging.Handler
     if developer_console:
-        console_handler = RichHandler(rich_tracebacks=True, show_time=True, show_level=True, show_path=False)
+        console_handler = CustomRichHandler(rich_tracebacks=True, show_time=True, show_level=True, show_path=False)
         formatter = ExtraFormatter("{name} {message}", style="{")
     else:
         console_handler = logging.StreamHandler()

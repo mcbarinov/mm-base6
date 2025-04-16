@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from fastapi import Request, Response
+from mm_std import str_starts_with_any
 from rich.logging import RichHandler
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -49,7 +50,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         elapsed = (time.perf_counter() - start_time) * 1000
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
-        if not path.startswith("/assets/"):
+        if not str_starts_with_any(path, ["/assets/", "/favicon.ico"]):
             self.access_logger.info(
                 "request",
                 extra={
