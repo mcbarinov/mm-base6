@@ -61,12 +61,12 @@ class DynamicValue(MongoModel[str]):
     }
 
 
-class DLog(MongoModel[ObjectId]):
+class SystemLog(MongoModel[ObjectId]):
     category: str
     data: object
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "dlog"
+    __collection__: str = "system_log"
     __indexes__ = "category, created_at"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
@@ -84,7 +84,7 @@ class DLog(MongoModel[ObjectId]):
 
 class BaseDb(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    dlog: AsyncMongoCollection[ObjectId, DLog]
+    system_log: AsyncMongoCollection[ObjectId, SystemLog]
     dynamic_config: AsyncMongoCollection[str, DynamicConfig]
     dynamic_value: AsyncMongoCollection[str, DynamicValue]
 

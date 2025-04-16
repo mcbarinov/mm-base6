@@ -13,12 +13,12 @@ from mm_std import AsyncScheduler, Result, synchronized
 from pymongo import AsyncMongoClient
 
 from mm_base6.core.config import CoreConfig
-from mm_base6.core.db import BaseDb, DLog
+from mm_base6.core.db import BaseDb, SystemLog
 from mm_base6.core.dynamic_config import DynamicConfigsModel, DynamicConfigStorage
 from mm_base6.core.dynamic_value import DynamicValuesModel, DynamicValueStorage
 from mm_base6.core.logger import configure_logging
 from mm_base6.core.system_service import SystemService
-from mm_base6.core.types_ import DLOG
+from mm_base6.core.types_ import SYSTEM_LOG
 
 DYNAMIC_CONFIGS_co = TypeVar("DYNAMIC_CONFIGS_co", bound=DynamicConfigsModel, covariant=True)
 DYNAMIC_VALUES_co = TypeVar("DYNAMIC_VALUES_co", bound=DynamicValuesModel, covariant=True)
@@ -70,7 +70,9 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
 
         inst.system_service = SystemService(core_config, inst.db, inst.scheduler)
 
-        inst.dynamic_configs = await DynamicConfigStorage.init_storage(inst.db.dynamic_config, dynamic_configs_cls, inst.dlog)
+        inst.dynamic_configs = await DynamicConfigStorage.init_storage(
+            inst.db.dynamic_config, dynamic_configs_cls, inst.system_log
+        )
         inst.dynamic_values = await DynamicValueStorage.init_storage(inst.db.dynamic_value, dynamic_values_cls)
 
         return inst
@@ -91,21 +93,21 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
         await self.reinit_scheduler()
         logger.info("app started")
         if not self.core_config.debug:
-            await self.dlog("app_start")
+            await self.system_log("app_start")
 
     async def shutdown(self) -> None:
         self.scheduler.stop()
         if not self.core_config.debug:
-            await self.dlog("app_stop")
+            await self.system_log("app_stop")
         await self.stop()
         await self.mongo_client.close()
         logger.info("app stopped")
         # noinspection PyUnresolvedReferences,PyProtectedMember
         os._exit(0)
 
-    async def dlog(self, category: str, data: object = None) -> None:
+    async def system_log(self, category: str, data: object = None) -> None:
         logger.debug("system_log %s %s", category, data)
-        await self.db.dlog.insert_one(DLog(id=ObjectId(), category=category, data=data))
+        await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
 
     @property
     def base_service_params(self) -> BaseServiceParams[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]:
@@ -114,7 +116,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
             dynamic_configs=self.dynamic_configs,
             dynamic_values=self.dynamic_values,
             db=self.db,
-            dlog=self.dlog,
+            system_log=self.system_log,
             send_telegram_message=self.system_service.send_telegram_message,
         )
 
@@ -140,7 +142,7 @@ class BaseServiceParams(Generic[DYNAMIC_CONFIGS, DYNAMIC_VALUES, DB]):
     dynamic_configs: DYNAMIC_CONFIGS
     dynamic_values: DYNAMIC_VALUES
     db: DB
-    dlog: DLOG
+    system_log: SYSTEM_LOG
     send_telegram_message: Callable[[str], Coroutine[Any, Any, Result[list[int]]]]
 
 
@@ -150,5 +152,5 @@ class BaseService(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]):
         self.dynamic_configs: DYNAMIC_CONFIGS_co = base_params.dynamic_configs
         self.dynamic_values: DYNAMIC_VALUES_co = base_params.dynamic_values
         self.db = base_params.db
-        self.dlog = base_params.dlog
+        self.system_log = base_params.system_log
         self.send_telegram_message = base_params.send_telegram_message

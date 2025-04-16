@@ -47,16 +47,16 @@ class PageCBV(BaseView):
             "dynamic_values_update.j2", value=self.core.system_service.export_dynamic_value_as_toml(key), key=key
         )
 
-    @router.get("/dlogs")
-    async def dlogs_page(
+    @router.get("/system-logs")
+    async def system_logs(
         self, category: Annotated[str | None, Query()] = None, limit: Annotated[int, Query()] = 100
     ) -> HTMLResponse:
-        category_stats = await self.core.system_service.get_dlog_category_stats()
+        category_stats = await self.core.system_service.get_system_log_category_stats()
         query = {"category": category} if category else {}
-        dlogs = await self.core.db.dlog.find(query, "-created_at", limit)
+        logs = await self.core.db.system_log.find(query, "-created_at", limit)
         form = {"category": category, "limit": limit}
-        all_count = await self.core.db.dlog.count({})
-        return await self.render.html("dlogs.j2", dlogs=dlogs, category_stats=category_stats, form=form, all_count=all_count)
+        all_count = await self.core.db.system_log.count({})
+        return await self.render.html("system_logs.j2", logs=logs, category_stats=category_stats, form=form, all_count=all_count)
 
 
 @cbv(router)

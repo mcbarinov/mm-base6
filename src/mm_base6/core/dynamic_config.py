@@ -9,7 +9,7 @@ from mm_std import Result, synchronized, utc_now
 
 from mm_base6.core.db import DynamicConfig, DynamicConfigType
 from mm_base6.core.errors import UnregisteredDynamicConfigError
-from mm_base6.core.types_ import DLOG
+from mm_base6.core.types_ import SYSTEM_LOG
 from mm_base6.core.utils import get_registered_public_attributes
 
 
@@ -55,7 +55,7 @@ class DynamicConfigStorage:
     types: ClassVar[dict[str, DynamicConfigType]] = {}
     hidden: ClassVar[set[str]] = set()
     collection: AsyncMongoCollection[str, DynamicConfig]
-    dlog: DLOG
+    system_log: SYSTEM_LOG
 
     @classmethod
     @synchronized
@@ -63,10 +63,10 @@ class DynamicConfigStorage:
         cls,
         collection: AsyncMongoCollection[str, DynamicConfig],
         dynamic_configs: type[DYNAMIC_CONFIGS],
-        dlog: DLOG,
+        system_log: SYSTEM_LOG,
     ) -> DYNAMIC_CONFIGS:
         cls.collection = collection
-        cls.dlog = dlog
+        cls.system_log = system_log
 
         for attr in get_attrs(dynamic_configs):
             type_ = get_type(attr.value)
@@ -82,7 +82,9 @@ class DynamicConfigStorage:
                 if typed_value_res.is_ok():
                     cls.storage[attr.key] = typed_value_res.unwrap()
                 else:
-                    await dlog("dynamic_config.get_typed_value", {"error": typed_value_res.unwrap_error(), "attr": attr.key})
+                    await system_log(
+                        "dynamic_config.get_typed_value", {"error": typed_value_res.unwrap_error(), "attr": attr.key}
+                    )
             else:  # create rows if not exists
                 await collection.insert_one(DynamicConfig(id=attr.key, type=type_, value=get_str_value(type_, attr.value)))
                 cls.storage[attr.key] = attr.value
@@ -103,10 +105,10 @@ class DynamicConfigStorage:
                     await cls.collection.set(key, {"value": str_value, "updated_at": utc_now()})
                     cls.storage[key] = type_value_res.unwrap()
                 else:
-                    await cls.dlog("DynamicConfigStorage.update", {"error": type_value_res.unwrap_error(), "key": key})
+                    await cls.system_log("DynamicConfigStorage.update", {"error": type_value_res.unwrap_error(), "key": key})
                     result = False
             else:
-                await cls.dlog("DynamicConfigStorage.update", {"error": "unknown key", "key": key})
+                await cls.system_log("DynamicConfigStorage.update", {"error": "unknown key", "key": key})
                 result = False
         return result
 

@@ -17,7 +17,7 @@ from mm_std import AsyncScheduler, Result, http_request, synchronized, toml_dump
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig
-from mm_base6.core.db import BaseDb, DLog, DynamicConfigType
+from mm_base6.core.db import BaseDb, DynamicConfigType, SystemLog
 from mm_base6.core.dynamic_config import DynamicConfigStorage
 from mm_base6.core.dynamic_value import DynamicValueStorage
 from mm_base6.core.errors import UserError
@@ -56,7 +56,7 @@ class Stats(BaseModel):
     db: dict[str, int]  # collection name -> count
     logfile_app: int  # size in bytes
     logfile_access: int  # size in bytes
-    system_log: int  # count
+    system_logs: int  # count
     threads: list[ThreadInfo]
     scheduler: Scheduler
     async_tasks: list[AsyncTask]
@@ -137,15 +137,15 @@ class SystemService:
     def has_dynamic_value_key(self, key: str) -> bool:
         return key in DynamicValueStorage.storage
 
-    # dlogs
-    async def dlog(self, category: str, data: object = None) -> None:
-        logger.debug("dlog: %s %s", category, data)
-        await self.db.dlog.insert_one(DLog(id=ObjectId(), category=category, data=data))
+    # system logs
+    async def system_log(self, category: str, data: object = None) -> None:
+        logger.debug("system log: %s %s", category, data)
+        await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
 
-    async def get_dlog_category_stats(self) -> dict[str, int]:
+    async def get_system_log_category_stats(self) -> dict[str, int]:
         result = {}
-        for category in await self.db.dlog.collection.distinct("category"):
-            result[category] = await self.db.dlog.count({"category": category})
+        for category in await self.db.system_log.collection.distinct("category"):
+            result[category] = await self.db.system_log.count({"category": category})
         return result
 
     # system
@@ -166,7 +166,7 @@ class SystemService:
         chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
         res = await mm_telegram.send_message(token, chat_id, message)
         if res.is_error():
-            await self.dlog("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
+            await self.system_log("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
             logger.error("send_telegram_message error: %s", res.unwrap_error())
         return res
 
@@ -182,7 +182,7 @@ class SystemService:
         proxies_url = cast(str, DynamicConfigStorage.storage.get("proxies_url"))
         res = await http_request(proxies_url)
         if res.is_error():
-            await self.dlog("update_proxies", {"error": res.error})
+            await self.system_log("update_proxies", {"error": res.error})
             return -1
         proxies = (res.body or "").strip().splitlines()
         proxies = [p.strip() for p in proxies if p.strip()]
@@ -233,7 +233,7 @@ class SystemService:
             db=db_stats,
             logfile_app=(await self.logfile_app.stat()).st_size,
             logfile_access=(await self.logfile_access.stat()).st_size,
-            system_log=await self.db.dlog.count({}),
+            system_logs=await self.db.system_log.count({}),
             threads=threads,
             scheduler=scheduler,
             async_tasks=async_tasks,
