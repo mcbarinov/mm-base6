@@ -161,11 +161,11 @@ class SystemService:
     async def send_telegram_message(self, message: str) -> Result[list[int]]:
         # TODO: run it in a separate thread
         if not self.has_telegram_settings():
-            return Result.failure("telegram token or chat_id is not set")
+            return Result.err("telegram token or chat_id is not set")
         token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
         chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
         res = await mm_telegram.send_message(token, chat_id, message)
-        if res.is_error():
+        if res.is_err():
             await self.system_log("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
             logger.error("send_telegram_message error: %s", res.unwrap_error())
         return res
@@ -181,7 +181,7 @@ class SystemService:
     async def update_proxies(self) -> int | None:
         proxies_url = cast(str, DynamicConfigStorage.storage.get("proxies_url"))
         res = await http_request(proxies_url)
-        if res.is_error():
+        if res.is_err():
             await self.system_log("update_proxies", {"error": res.error})
             return -1
         proxies = (res.body or "").strip().splitlines()

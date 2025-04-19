@@ -35,11 +35,11 @@ class CBV(View):
 
     @router.get("/result-ok")
     async def result_ok(self) -> Result[str]:
-        return Result.success("it works")
+        return Result.ok("it works")
 
     @router.get("/result-err")
     async def result_err(self) -> Result[str]:
-        return Result.failure("bla bla", extra={"logs": ["ssss", 123]})
+        return Result.ok("bla bla", extra={"logs": ["ssss", 123]})
 
     @router.post("/upload")
     async def upload(self, file: Annotated[UploadFile, File()]) -> dict[str, str]:

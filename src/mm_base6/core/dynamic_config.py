@@ -138,20 +138,20 @@ def get_type(value: object) -> DynamicConfigType:
 def get_typed_value(type_: DynamicConfigType, str_value: str) -> Result[Any]:
     try:
         if type_ == DynamicConfigType.BOOLEAN:
-            return Result.success(str_value.lower() == "true")
+            return Result.ok(str_value.lower() == "true")
         if type_ == DynamicConfigType.INTEGER:
-            return Result.success(int(str_value))
+            return Result.ok(int(str_value))
         if type_ == DynamicConfigType.FLOAT:
-            return Result.success(float(str_value))
+            return Result.ok(float(str_value))
         if type_ == DynamicConfigType.DECIMAL:
-            return Result.success(Decimal(str_value))
+            return Result.ok(Decimal(str_value))
         if type_ == DynamicConfigType.STRING:
-            return Result.success(str_value)
+            return Result.ok(str_value)
         if type_ == DynamicConfigType.MULTILINE:
-            return Result.success(str_value.replace("\r", ""))
-        return Result.failure(f"unsupported type: {type_}")
+            return Result.ok(str_value.replace("\r", ""))
+        return Result.err(f"unsupported type: {type_}")
     except Exception as e:
-        return Result.failure_with_exception(e)
+        return Result.err(e)
 
 
 def get_str_value(type_: DynamicConfigType, value: object) -> str:
