@@ -1,10 +1,11 @@
 from typing import Self
 
+from mm_base6 import BaseCore, CoreConfig
+
 from app.core.db import Db
 from app.core.services.data_service import DataService
 from app.core.services.misc_service import MiscService
 from app.settings import DynamicConfigs, DynamicValues
-from mm_base6 import BaseCore, CoreConfig
 
 
 class Core(BaseCore[DynamicConfigs, DynamicValues, Db]):

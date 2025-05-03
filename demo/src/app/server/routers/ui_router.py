@@ -3,11 +3,11 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Form
 from fastapi.params import Query
+from mm_base6 import cbv, redirect
 from starlette.responses import HTMLResponse, RedirectResponse
 
 from app.core.db import DataStatus
 from app.server.deps import View
-from mm_base6 import cbv, redirect
 
 router = APIRouter(include_in_schema=False)
 
