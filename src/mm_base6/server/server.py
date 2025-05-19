@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 def init_server(
     core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY],
-    telegram_bot: TelegramBot,
+    telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
     router: APIRouter,
@@ -57,7 +57,7 @@ def init_server(
 def configure_state(
     app: FastAPI,
     core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY],
-    telegram_bot: TelegramBot,
+    telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_env: Environment,
 ) -> None:
