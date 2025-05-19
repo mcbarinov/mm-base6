@@ -206,6 +206,14 @@ class SystemService:
         await bot.start(settings.token, settings.admins)
         return True
 
+    async def shutdown_telegram_bot(self, bot: TelegramBot) -> bool:
+        settings = self.get_telegram_bot_settings()
+        if settings is None:
+            raise UserError("Telegram settings not found: telegram_token, telegram_bot_admins")
+
+        await bot.shutdown()
+        return True
+
     def has_proxies_settings(self) -> bool:
         proxies_url = DynamicConfigStorage.storage.get("proxies_url")
         return (

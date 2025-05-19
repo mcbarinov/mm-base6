@@ -22,6 +22,7 @@ class PageCBV(BaseView):
             stats=await self.core.system_service.get_stats(),
             telegram_message_settings=telegram_message_settings,
             telegram_bot_settings=telegram_bot_settings,
+            telegram_bot=self.telegram_bot,
             has_proxies_settings=has_proxies_settings,
         )
 

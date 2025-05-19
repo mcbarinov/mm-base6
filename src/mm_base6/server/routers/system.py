@@ -75,3 +75,7 @@ class CBV(BaseView):
     @router.post("/telegram/start-bot")
     async def start_telegram_bot(self) -> bool:
         return await self.core.system_service.start_telegram_bot(self.telegram_bot)
+
+    @router.post("/telegram/shutdown-bot")
+    async def shutdown_telegram_bot(self) -> bool:
+        return await self.core.system_service.shutdown_telegram_bot(self.telegram_bot)

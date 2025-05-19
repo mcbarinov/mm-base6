@@ -43,10 +43,10 @@
         {% if telegram_bot_settings %}
           <tr>
             <td>telegram bot</td>
-            <td>?</td>
+            <td>{{ "started" if telegram_bot.app is not none else "stopped" }}</td>
             <td>
-              <a href="/api-post/system/telegram/start-bot">start bot</a> |
-              <a href="/api-post/system/telegram/stop-bot">stop bot</a>
+              <a href="/api-post/system/telegram/start-bot">start</a> |
+              <a href="/api-post/system/telegram/shutdown-bot">shutdown</a>
             </td>
           </tr>
         {% endif %}

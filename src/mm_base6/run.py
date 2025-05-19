@@ -59,9 +59,15 @@ async def _main(
 ) -> None:
     loop = asyncio.get_running_loop()
     loop.set_task_factory(_custom_task_factory)
+
     core = await core_class.init(core_config)
     await core.startup()
+
     telegram_bot = TelegramBot(telegram_handlers, {"core": core})
+    telegram_bot_settings = core.system_service.get_telegram_bot_settings()
+    if telegram_bot_settings and telegram_bot_settings.auto_start:
+        await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
+
     fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 
