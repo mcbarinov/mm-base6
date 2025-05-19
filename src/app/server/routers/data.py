@@ -13,11 +13,11 @@ router = APIRouter(prefix="/api/data", tags=["data"])
 class CBV(View):
     @router.post("/generate-one")
     async def generate_one(self) -> MongoInsertOneResult:
-        return await self.core.data_service.generate_one()
+        return await self.core.services.data.generate_one()
 
     @router.post("/generate-many")
     async def generate_many(self) -> MongoInsertManyResult:
-        return await self.core.data_service.generate_many()
+        return await self.core.services.data.generate_many()
 
     @router.get("/{id}")
     async def get_data(self, id: ObjectId) -> Data:

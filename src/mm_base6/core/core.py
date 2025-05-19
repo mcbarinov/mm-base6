@@ -17,8 +17,12 @@ from mm_base6.core.db import BaseDb, SystemLog
 from mm_base6.core.dynamic_config import DynamicConfigsModel, DynamicConfigStorage
 from mm_base6.core.dynamic_value import DynamicValuesModel, DynamicValueStorage
 from mm_base6.core.logger import configure_logging
-from mm_base6.core.system_service import SystemService
-from mm_base6.core.types import SYSTEM_LOG
+from mm_base6.core.services.dynamic_config import DynamicConfigService
+from mm_base6.core.services.dynamic_value import DynamicValueService
+from mm_base6.core.services.proxy import ProxyService
+from mm_base6.core.services.system import SystemService
+from mm_base6.core.services.telegram import TelegramService
+from mm_base6.core.types import SERVICE_REGISTRY, SYSTEM_LOG
 
 DYNAMIC_CONFIGS_co = TypeVar("DYNAMIC_CONFIGS_co", bound=DynamicConfigsModel, covariant=True)
 DYNAMIC_VALUES_co = TypeVar("DYNAMIC_VALUES_co", bound=DynamicValuesModel, covariant=True)
@@ -33,7 +37,16 @@ DB = TypeVar("DB", bound=BaseDb)
 logger = logging.getLogger(__name__)
 
 
-class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
+@dataclass
+class BaseServices:
+    dynamic_config: DynamicConfigService
+    dynamic_value: DynamicValueService
+    proxy: ProxyService
+    system: SystemService
+    telegram: TelegramService
+
+
+class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY], ABC):
     core_config: CoreConfig
     scheduler: AsyncScheduler
     mongo_client: AsyncMongoClient[Any]
@@ -41,9 +54,12 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
     db: DB_co
     dynamic_configs: DYNAMIC_CONFIGS_co
     dynamic_values: DYNAMIC_VALUES_co
-    system_service: SystemService
+    services: SERVICE_REGISTRY
+    base_services: BaseServices
 
-    def __new__(cls, *_args: object, **_kwargs: object) -> BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]:
+    def __new__(
+        cls, *_args: object, **_kwargs: object
+    ) -> BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]:
         raise TypeError("Use `BaseCore.init()` instead of direct instantiation.")
 
     @classmethod
@@ -58,6 +74,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
         dynamic_configs_cls: type[DYNAMIC_CONFIGS_co],
         dynamic_values_cls: type[DYNAMIC_VALUES_co],
         db_cls: type[DB_co],
+        service_registry_cls: type[SERVICE_REGISTRY],
     ) -> Self:
         configure_logging(core_config.debug, core_config.data_dir)
         inst = super().__new__(cls)
@@ -67,8 +84,21 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
         inst.mongo_client = conn.client
         inst.database = conn.database
         inst.db = await db_cls.init_collections(conn.database)
+        inst.services = service_registry_cls()
 
-        inst.system_service = SystemService(core_config, inst.db, inst.scheduler)
+        # base services
+        system_service = SystemService(core_config, inst.db, inst.scheduler)
+        dynamic_config_service = DynamicConfigService(system_service)
+        dynamic_value_service = DynamicValueService(system_service)
+        proxy_service = ProxyService(system_service)
+        telegram_service = TelegramService(system_service)
+        inst.base_services = BaseServices(
+            dynamic_config=dynamic_config_service,
+            dynamic_value=dynamic_value_service,
+            proxy=proxy_service,
+            system=system_service,
+            telegram=telegram_service,
+        )
 
         inst.dynamic_configs = await DynamicConfigStorage.init_storage(
             inst.db.dynamic_config, dynamic_configs_cls, inst.system_log
@@ -83,8 +113,8 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
         if self.scheduler.is_running():
             self.scheduler.stop()
         self.scheduler.clear_tasks()
-        if self.system_service.has_proxies_settings():
-            self.scheduler.add_task("system_update_proxies", 60, self.system_service.update_proxies)
+        if self.base_services.proxy.has_proxies_settings():
+            self.scheduler.add_task("system_update_proxies", 60, self.base_services.proxy.update_proxies)
         await self.configure_scheduler()
         self.scheduler.start()
 
@@ -117,7 +147,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co], ABC):
             dynamic_values=self.dynamic_values,
             db=self.db,
             system_log=self.system_log,
-            send_telegram_message=self.system_service.send_telegram_message,
+            send_telegram_message=self.base_services.telegram.send_message,
         )
 
     @abstractmethod

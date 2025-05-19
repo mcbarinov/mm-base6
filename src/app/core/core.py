@@ -7,19 +7,22 @@ from app.settings import DynamicConfigs, DynamicValues
 from mm_base6 import BaseCore, CoreConfig
 
 
-class Core(BaseCore[DynamicConfigs, DynamicValues, Db]):
-    data_service: DataService
-    misc_service: MiscService
+class ServiceRegistry:
+    data: DataService
+    misc: MiscService
 
+
+class Core(BaseCore[DynamicConfigs, DynamicValues, Db, ServiceRegistry]):
     @classmethod
     async def init(cls, core_config: CoreConfig) -> Self:
-        res = await super().base_init(core_config, DynamicConfigs, DynamicValues, Db)
-        res.data_service = DataService(res.base_service_params)
-        res.misc_service = MiscService(res.base_service_params)
+        res = await super().base_init(core_config, DynamicConfigs, DynamicValues, Db, ServiceRegistry)
+        res.services.data = DataService(res.base_service_params)
+        res.services.misc = MiscService(res.base_service_params)
+
         return res
 
     async def configure_scheduler(self) -> None:
-        self.scheduler.add_task("generate_one", 60, self.data_service.generate_one)
+        self.scheduler.add_task("generate_one", 60, self.services.data.generate_one)
 
     async def start(self) -> None:
         pass

@@ -11,4 +11,4 @@ router: APIRouter = APIRouter(prefix="/api/system/dynamic-configs", tags=["syste
 class CBV(BaseView):
     @router.get("/toml", response_class=PlainTextResponse)
     async def get_dynamic_configs_toml(self) -> str:
-        return self.core.system_service.export_dynamic_configs_as_toml()
+        return self.core.base_services.dynamic_config.export_as_toml()

@@ -29,7 +29,7 @@ class CBV(View):
         start = time.perf_counter()
         logger.info("sleep_seconds called: %d", seconds)
         await asyncio.sleep(seconds)
-        counter = self.core.misc_service.increment_counter()
+        counter = self.core.services.misc.increment_counter()
         logger.info("sleep_seconds: %d, perf_counter=%s, counter=%s", seconds, time.perf_counter() - start, counter)
         return {"sleep_seconds": seconds, "counter": counter, "perf_counter": time.perf_counter() - start}
 
@@ -49,4 +49,4 @@ class CBV(View):
 
     @router.post("/update-dynamic-value")
     async def update_dynamic_value(self) -> int:
-        return await self.core.misc_service.update_dynamic_value()
+        return await self.core.services.misc.update_dynamic_value()

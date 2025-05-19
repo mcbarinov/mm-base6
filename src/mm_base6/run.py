@@ -10,12 +10,13 @@ from mm_telegram import TelegramBot, TelegramHandler
 
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.core import BaseCore, DB_co, DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co
+from mm_base6.core.types import SERVICE_REGISTRY
 from mm_base6.server.config import ServerConfig
 from mm_base6.server.jinja import JinjaConfig
 from mm_base6.server.server import init_server
 from mm_base6.server.uvicorn import serve_uvicorn
 
-Core = TypeVar("Core", bound=BaseCore[Any, Any, Any])
+Core = TypeVar("Core", bound=BaseCore[Any, Any, Any, Any])
 
 
 def run(
@@ -23,7 +24,7 @@ def run(
     core_config: CoreConfig,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]],
+    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]],
     telegram_handlers: list[TelegramHandler],
     router: APIRouter,
     host: str,
@@ -50,7 +51,7 @@ async def _main(
     core_config: CoreConfig,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]],
+    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]],
     telegram_handlers: list[TelegramHandler],
     router: APIRouter,
     host: str,
@@ -64,7 +65,7 @@ async def _main(
     await core.startup()
 
     telegram_bot = TelegramBot(telegram_handlers, {"core": core})
-    telegram_bot_settings = core.system_service.get_telegram_bot_settings()
+    telegram_bot_settings = core.base_services.telegram.get_bot_settings()
     if telegram_bot_settings and telegram_bot_settings.auto_start:
         await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 

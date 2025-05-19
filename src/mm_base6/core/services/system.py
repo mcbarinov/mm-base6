@@ -6,22 +6,17 @@ import platform
 import threading
 import time
 from datetime import datetime, timedelta
-from typing import Literal, cast
+from typing import Literal
 
 import anyio
-import mm_telegram
 import psutil
 import pydash
 from bson import ObjectId
-from mm_std import AsyncScheduler, Result, http_request, synchronized, toml_dumps, toml_loads, utc_now
-from mm_telegram import TelegramBot
+from mm_std import AsyncScheduler, utc_now
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig
-from mm_base6.core.db import BaseDb, DynamicConfigType, SystemLog
-from mm_base6.core.dynamic_config import DynamicConfigStorage
-from mm_base6.core.dynamic_value import DynamicValueStorage
-from mm_base6.core.errors import UserError
+from mm_base6.core.db import BaseDb, SystemLog
 
 
 class Stats(BaseModel):
@@ -63,30 +58,6 @@ class Stats(BaseModel):
     async_tasks: list[AsyncTask]
 
 
-class DynamicConfigsInfo(BaseModel):
-    dynamic_configs: dict[str, object]
-    descriptions: dict[str, str]
-    types: dict[str, DynamicConfigType]
-    hidden: set[str]
-
-
-class DynamicValuesInfo(BaseModel):
-    dynamic_values: dict[str, object]
-    persistent: dict[str, bool]
-    descriptions: dict[str, str]
-
-
-class TelegramMessageSettings(BaseModel):
-    token: str
-    chat_id: int
-
-
-class TelegramBotSettings(BaseModel):
-    token: str
-    admins: list[int]
-    auto_start: bool
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -98,58 +69,6 @@ class SystemService:
         self.logfile_access = anyio.Path(core_config.data_dir / "access.log")
         self.scheduler = scheduler
 
-    # dynamic configs
-
-    def get_dynamic_configs_info(self) -> DynamicConfigsInfo:
-        return DynamicConfigsInfo(
-            dynamic_configs=DynamicConfigStorage.storage,
-            descriptions=DynamicConfigStorage.descriptions,
-            types=DynamicConfigStorage.types,
-            hidden=DynamicConfigStorage.hidden,
-        )
-
-    def export_dynamic_configs_as_toml(self) -> str:
-        result = pydash.omit(DynamicConfigStorage.storage, *DynamicConfigStorage.hidden)
-        return toml_dumps(result)
-
-    async def update_dynamic_configs_from_toml(self, toml_value: str) -> bool | None:
-        data = toml_loads(toml_value)
-        if isinstance(data, dict):
-            return await DynamicConfigStorage.update({key: str(value) for key, value in data.items()})
-
-    async def update_dynamic_config(self, data: dict[str, str]) -> bool:
-        return await DynamicConfigStorage.update(data)
-
-    def has_dynamic_config_key(self, key: str) -> bool:
-        return key in DynamicConfigStorage.storage
-
-    # dynamic value
-    def get_dynamic_values_info(self) -> DynamicValuesInfo:
-        return DynamicValuesInfo(
-            dynamic_values=DynamicValueStorage.storage,
-            persistent=DynamicValueStorage.persistent,
-            descriptions=DynamicValueStorage.descriptions,
-        )
-
-    def export_dynamic_values_as_toml(self) -> str:
-        return toml_dumps(DynamicValueStorage.storage)
-
-    def export_dynamic_value_as_toml(self, key: str) -> str:
-        return toml_dumps({key: DynamicValueStorage.storage[key]})
-
-    def get_dynamic_value(self, key: str) -> object:
-        return DynamicValueStorage.storage[key]
-
-    async def update_dynamic_value(self, key: str, toml_str: str) -> None:
-        data = toml_loads(toml_str)
-        if key not in data:
-            raise UserError(f"Key '{key}' not found in toml data")
-        await DynamicValueStorage.update_value(key, data[key])
-
-    def has_dynamic_value_key(self, key: str) -> bool:
-        return key in DynamicValueStorage.storage
-
-    # system logs
     async def system_log(self, category: str, data: object = None) -> None:
         logger.debug("system log: %s %s", category, data)
         await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
@@ -159,82 +78,6 @@ class SystemService:
         for category in await self.db.system_log.collection.distinct("category"):
             result[category] = await self.db.system_log.count({"category": category})
         return result
-
-    # system
-
-    def get_telegram_message_settings(self) -> TelegramMessageSettings | None:
-        try:
-            token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
-            chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
-            if ":" not in token or chat_id == 0:
-                return None
-            return TelegramMessageSettings(token=token, chat_id=chat_id)
-        except Exception:
-            return None
-
-    def get_telegram_bot_settings(self) -> TelegramBotSettings | None:
-        try:
-            token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
-            admins_str = cast(str, DynamicConfigStorage.storage.get("telegram_bot_admins"))
-            admins = [int(admin.strip()) for admin in admins_str.split(",") if admin.strip()]
-            auto_start = False
-            if "telegram_bot_auto_start" in DynamicConfigStorage.storage:
-                auto_start = cast(bool, DynamicConfigStorage.storage.get("telegram_bot_auto_start"))
-            if ":" not in token or not admins:
-                return None
-            return TelegramBotSettings(token=token, admins=admins, auto_start=auto_start)
-        except Exception:
-            return None
-
-    async def send_telegram_message(self, message: str) -> Result[list[int]]:
-        # TODO: run it in a separate thread
-        settings = self.get_telegram_message_settings()
-        if settings is None:
-            return Result.err("telegram_token or chat_id is not set")
-
-        res = await mm_telegram.send_message(settings.token, settings.chat_id, message)
-        if res.is_err():
-            await self.system_log("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
-            logger.error("send_telegram_message error: %s", res.unwrap_error())
-        return res
-
-    async def start_telegram_bot(self, bot: TelegramBot) -> bool:
-        settings = self.get_telegram_bot_settings()
-        if settings is None:
-            raise UserError("Telegram settings not found: telegram_token, telegram_bot_admins")
-
-        await bot.start(settings.token, settings.admins)
-        return True
-
-    async def shutdown_telegram_bot(self, bot: TelegramBot) -> bool:
-        settings = self.get_telegram_bot_settings()
-        if settings is None:
-            raise UserError("Telegram settings not found: telegram_token, telegram_bot_admins")
-
-        await bot.shutdown()
-        return True
-
-    def has_proxies_settings(self) -> bool:
-        proxies_url = DynamicConfigStorage.storage.get("proxies_url")
-        return (
-            isinstance(proxies_url, str)
-            and proxies_url.strip() != ""
-            and "proxies" in DynamicValueStorage.storage
-            and "proxies_updated_at" in DynamicValueStorage.storage
-        )
-
-    @synchronized
-    async def update_proxies(self) -> int | None:
-        proxies_url = cast(str, DynamicConfigStorage.storage.get("proxies_url"))
-        res = await http_request(proxies_url)
-        if res.is_err():
-            await self.system_log("update_proxies", {"error": res.error})
-            return -1
-        proxies = (res.body or "").strip().splitlines()
-        proxies = [p.strip() for p in proxies if p.strip()]
-        await DynamicValueStorage.update_value("proxies", proxies)
-        await DynamicValueStorage.update_value("proxies_updated_at", utc_now())
-        return len(proxies)
 
     async def get_stats(self) -> Stats:
         # threads
