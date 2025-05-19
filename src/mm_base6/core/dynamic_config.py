@@ -9,7 +9,7 @@ from mm_std import Result, synchronized, utc_now
 
 from mm_base6.core.db import DynamicConfig, DynamicConfigType
 from mm_base6.core.errors import UnregisteredDynamicConfigError
-from mm_base6.core.types_ import SYSTEM_LOG
+from mm_base6.core.types import SYSTEM_LOG
 from mm_base6.core.utils import get_registered_public_attributes
 
 

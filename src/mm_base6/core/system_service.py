@@ -5,7 +5,6 @@ import logging
 import platform
 import threading
 import time
-import typing
 from datetime import datetime, timedelta
 from typing import Literal, cast
 
@@ -23,9 +22,6 @@ from mm_base6.core.db import BaseDb, DynamicConfigType, SystemLog
 from mm_base6.core.dynamic_config import DynamicConfigStorage
 from mm_base6.core.dynamic_value import DynamicValueStorage
 from mm_base6.core.errors import UserError
-
-if typing.TYPE_CHECKING:
-    pass
 
 
 class Stats(BaseModel):

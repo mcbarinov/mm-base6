@@ -18,7 +18,7 @@ from mm_base6.core.dynamic_config import DynamicConfigsModel, DynamicConfigStora
 from mm_base6.core.dynamic_value import DynamicValuesModel, DynamicValueStorage
 from mm_base6.core.logger import configure_logging
 from mm_base6.core.system_service import SystemService
-from mm_base6.core.types_ import SYSTEM_LOG
+from mm_base6.core.types import SYSTEM_LOG
 
 DYNAMIC_CONFIGS_co = TypeVar("DYNAMIC_CONFIGS_co", bound=DynamicConfigsModel, covariant=True)
 DYNAMIC_VALUES_co = TypeVar("DYNAMIC_VALUES_co", bound=DynamicValuesModel, covariant=True)
