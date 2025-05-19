@@ -25,7 +25,7 @@ def run(
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
     core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]],
-    telegram_handlers: list[TelegramHandler],
+    telegram_handlers: list[TelegramHandler] | None = None,
     router: APIRouter,
     host: str,
     port: int,
@@ -52,7 +52,7 @@ async def _main(
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
     core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]],
-    telegram_handlers: list[TelegramHandler],
+    telegram_handlers: list[TelegramHandler] | None = None,
     router: APIRouter,
     host: str,
     port: int,
@@ -64,10 +64,12 @@ async def _main(
     core = await core_class.init(core_config)
     await core.startup()
 
-    telegram_bot = TelegramBot(telegram_handlers, {"core": core})
-    telegram_bot_settings = core.base_services.telegram.get_bot_settings()
-    if telegram_bot_settings and telegram_bot_settings.auto_start:
-        await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
+    telegram_bot = None
+    if telegram_handlers is not None:
+        telegram_bot = TelegramBot(telegram_handlers, {"core": core})
+        telegram_bot_settings = core.base_services.telegram.get_bot_settings()
+        if telegram_bot_settings and telegram_bot_settings.auto_start:
+            await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 
     fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
