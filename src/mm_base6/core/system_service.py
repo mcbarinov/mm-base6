@@ -5,6 +5,7 @@ import logging
 import platform
 import threading
 import time
+import typing
 from datetime import datetime, timedelta
 from typing import Literal, cast
 
@@ -14,6 +15,7 @@ import psutil
 import pydash
 from bson import ObjectId
 from mm_std import AsyncScheduler, Result, http_request, synchronized, toml_dumps, toml_loads, utc_now
+from mm_telegram import TelegramBot
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig
@@ -21,6 +23,9 @@ from mm_base6.core.db import BaseDb, DynamicConfigType, SystemLog
 from mm_base6.core.dynamic_config import DynamicConfigStorage
 from mm_base6.core.dynamic_value import DynamicValueStorage
 from mm_base6.core.errors import UserError
+
+if typing.TYPE_CHECKING:
+    pass
 
 
 class Stats(BaseModel):
@@ -73,6 +78,17 @@ class DynamicValuesInfo(BaseModel):
     dynamic_values: dict[str, object]
     persistent: dict[str, bool]
     descriptions: dict[str, str]
+
+
+class TelegramMessageSettings(BaseModel):
+    token: str
+    chat_id: int
+
+
+class TelegramBotSettings(BaseModel):
+    token: str
+    admins: list[int]
+    auto_start: bool
 
 
 logger = logging.getLogger(__name__)
@@ -150,29 +166,55 @@ class SystemService:
 
     # system
 
-    def has_telegram_settings(self) -> bool:
+    def get_telegram_message_settings(self) -> TelegramMessageSettings | None:
         try:
             token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
             chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
-            return ":" in token and chat_id != 0  # noqa: TRY300
+            if ":" not in token or chat_id == 0:
+                return None
+            return TelegramMessageSettings(token=token, chat_id=chat_id)
         except Exception:
-            return False
+            return None
+
+    def get_telegram_bot_settings(self) -> TelegramBotSettings | None:
+        try:
+            token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
+            admins_str = cast(str, DynamicConfigStorage.storage.get("telegram_bot_admins"))
+            admins = [int(admin.strip()) for admin in admins_str.split(",") if admin.strip()]
+            auto_start = False
+            if "telegram_bot_auto_start" in DynamicConfigStorage.storage:
+                auto_start = cast(bool, DynamicConfigStorage.storage.get("telegram_bot_auto_start"))
+            if ":" not in token or not admins:
+                return None
+            return TelegramBotSettings(token=token, admins=admins, auto_start=auto_start)
+        except Exception:
+            return None
 
     async def send_telegram_message(self, message: str) -> Result[list[int]]:
         # TODO: run it in a separate thread
-        if not self.has_telegram_settings():
-            return Result.err("telegram token or chat_id is not set")
-        token = cast(str, DynamicConfigStorage.storage.get("telegram_token"))
-        chat_id = cast(int, DynamicConfigStorage.storage.get("telegram_chat_id"))
-        res = await mm_telegram.send_message(token, chat_id, message)
+        settings = self.get_telegram_message_settings()
+        if settings is None:
+            return Result.err("telegram_token or chat_id is not set")
+
+        res = await mm_telegram.send_message(settings.token, settings.chat_id, message)
         if res.is_err():
             await self.system_log("send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra})
             logger.error("send_telegram_message error: %s", res.unwrap_error())
         return res
 
+    async def start_telegram_bot(self, bot: TelegramBot) -> bool:
+        settings = self.get_telegram_bot_settings()
+        if settings is None:
+            raise UserError("Telegram settings not found: telegram_token, telegram_bot_admins")
+
+        await bot.start(settings.token, settings.admins)
+        return True
+
     def has_proxies_settings(self) -> bool:
+        proxies_url = DynamicConfigStorage.storage.get("proxies_url")
         return (
-            "proxies_url" in DynamicConfigStorage.storage
+            isinstance(proxies_url, str)
+            and proxies_url.strip() != ""
             and "proxies" in DynamicValueStorage.storage
             and "proxies_updated_at" in DynamicValueStorage.storage
         )

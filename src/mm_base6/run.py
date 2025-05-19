@@ -6,9 +6,10 @@ from typing import Any, TypeVar
 
 import uvloop
 from fastapi import APIRouter
+from mm_telegram import TelegramBot, TelegramHandler
 
 from mm_base6.core.config import CoreConfig
-from mm_base6.core.core import BaseCore
+from mm_base6.core.core import BaseCore, DB_co, DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co
 from mm_base6.server.config import ServerConfig
 from mm_base6.server.jinja import JinjaConfig
 from mm_base6.server.server import init_server
@@ -22,7 +23,8 @@ def run(
     core_config: CoreConfig,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[Core],
+    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]],
+    telegram_handlers: list[TelegramHandler],
     router: APIRouter,
     host: str,
     port: int,
@@ -33,6 +35,7 @@ def run(
             core_config=core_config,
             server_config=server_config,
             core_class=core_class,
+            telegram_handlers=telegram_handlers,
             router=router,
             jinja_config=jinja_config,
             host=host,
@@ -47,7 +50,8 @@ async def _main(
     core_config: CoreConfig,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[Core],
+    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]],
+    telegram_handlers: list[TelegramHandler],
     router: APIRouter,
     host: str,
     port: int,
@@ -57,7 +61,8 @@ async def _main(
     loop.set_task_factory(_custom_task_factory)
     core = await core_class.init(core_config)
     await core.startup()
-    fastapi_app = init_server(core, server_config, jinja_config, router)
+    telegram_bot = TelegramBot(telegram_handlers, {"core": core})
+    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 
 

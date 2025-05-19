@@ -14,12 +14,14 @@ router: APIRouter = APIRouter(prefix="/system", include_in_schema=False)
 class PageCBV(BaseView):
     @router.get("/")
     async def system_page(self) -> HTMLResponse:
-        has_telegram_settings = self.core.system_service.has_telegram_settings()
+        telegram_message_settings = self.core.system_service.get_telegram_message_settings()
+        telegram_bot_settings = self.core.system_service.get_telegram_bot_settings()
         has_proxies_settings = self.core.system_service.has_proxies_settings()
         return await self.render.html(
             "system.j2",
             stats=await self.core.system_service.get_stats(),
-            has_telegram_settings=has_telegram_settings,
+            telegram_message_settings=telegram_message_settings,
+            telegram_bot_settings=telegram_bot_settings,
             has_proxies_settings=has_proxies_settings,
         )
 

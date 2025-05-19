@@ -10,6 +10,7 @@ from fastapi.applications import AppType
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from jinja2 import Environment
+from mm_telegram import TelegramBot
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse, PlainTextResponse
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 def init_server(
     core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co],
+    telegram_bot: TelegramBot,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
     router: APIRouter,
@@ -37,7 +39,7 @@ def init_server(
     jinja_env = init_env(core, server_config, jinja_config)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=configure_lifespan(core))
 
-    configure_state(app, core, server_config, jinja_env)
+    configure_state(app, core, telegram_bot, server_config, jinja_env)
     configure_openapi(app, core.core_config, server_config)
     configure_exception_handler(app, core.core_config)
 
@@ -54,12 +56,14 @@ def init_server(
 def configure_state(
     app: FastAPI,
     core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co],
+    telegram_bot: TelegramBot,
     server_config: ServerConfig,
     jinja_env: Environment,
 ) -> None:
     app.state.core = core
     app.state.jinja_env = jinja_env
     app.state.server_config = server_config
+    app.state.telegram_bot = telegram_bot
 
 
 def configure_openapi(app: FastAPI, core_config: CoreConfig, server_config: ServerConfig) -> None:

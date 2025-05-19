@@ -31,14 +31,22 @@
             <td><a href="/api-post/system/update-proxies">update</a></td>
           </tr>
         {% endif %}
-        {% if has_telegram_settings %}
+        {% if telegram_message_settings %}
           <tr>
-            <td>telegram</td>
+            <td>telegram message</td>
             <td></td>
             <td>
-              {% if has_telegram_settings %}
-                <a href="/api-post/system/send-test-telegram-message">send test message</a>
-              {% endif %}
+              <a href="/api-post/system/telegram/send-test-message">test message</a>
+            </td>
+          </tr>
+        {% endif %}
+        {% if telegram_bot_settings %}
+          <tr>
+            <td>telegram bot</td>
+            <td>?</td>
+            <td>
+              <a href="/api-post/system/telegram/start-bot">start bot</a> |
+              <a href="/api-post/system/telegram/stop-bot">stop bot</a>
             </td>
           </tr>
         {% endif %}
@@ -77,7 +85,7 @@
         </tr>
         <tr>
           <td>logfile, access</td>
-          <td>{{ stats.logfile_access | filesizeformat }}</td>
+          <td></td>
           <td>
             <nav>
               <ul>

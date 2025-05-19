@@ -7,7 +7,7 @@ from app.core.core import Core
 from mm_base6 import BaseView
 
 
-def get_core(request: Request) -> Core:
+async def get_core(request: Request) -> Core:
     return cast(Core, request.app.state.core)
 
 

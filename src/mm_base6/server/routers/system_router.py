@@ -65,9 +65,13 @@ class CBV(BaseView):
     async def update_proxies(self) -> int | None:
         return await self.core.system_service.update_proxies()
 
-    @router.post("/send-test-telegram-message")
+    @router.post("/telegram/send-test-message")
     async def send_test_telegram_message(self) -> Result[list[int]]:
         message = ""
         for i in range(1800):
             message += f"{i} "
         return await self.core.system_service.send_telegram_message(message)
+
+    @router.post("/telegram/start-bot")
+    async def start_telegram_bot(self) -> bool:
+        return await self.core.system_service.start_telegram_bot(self.telegram_bot)

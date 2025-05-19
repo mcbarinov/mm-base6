@@ -149,7 +149,7 @@ def configure_logging(developer_console: bool, data_dir: Path) -> None:
 
     logger.addHandler(console_handler)
 
-    for name in ["mm_std", "pymongo", "python_multipart", "urllib3"]:
+    for name in ["mm_std", "pymongo", "python_multipart", "urllib3", "httpcore.http11"]:
         logging.getLogger(name).setLevel(logging.WARNING)
 
     logging.getLogger("uvicorn").addHandler(logging.NullHandler())
