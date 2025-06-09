@@ -2,7 +2,7 @@ import logging
 from typing import cast
 
 import mm_telegram
-from mm_std import Result
+from mm_result import Result
 from mm_telegram import TelegramBot
 from pydantic import BaseModel
 
@@ -62,9 +62,9 @@ class TelegramService:
         res = await mm_telegram.send_message(settings.token, settings.chat_id, message)
         if res.is_err():
             await self.system_service.system_log(
-                "send_telegram_message", {"error": res.unwrap_error(), "message": message, "data": res.extra}
+                "send_telegram_message", {"error": res.unwrap_err(), "message": message, "data": res.extra}
             )
-            logger.error("send_telegram_message error: %s", res.unwrap_error())
+            logger.error("send_telegram_message error: %s", res.unwrap_err())
         return res
 
     async def start_bot(self, bot: TelegramBot) -> bool:

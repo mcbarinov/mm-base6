@@ -2,8 +2,8 @@ import logging
 import random
 
 from bson import ObjectId
+from mm_http import http_request
 from mm_mongo import MongoInsertManyResult, MongoInsertOneResult
-from mm_std import http_request
 
 from app.core.db import Data, DataStatus
 from app.core.types_ import AppService, AppServiceParams

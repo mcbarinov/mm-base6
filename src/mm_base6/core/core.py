@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from typing import Any, Generic, Self, TypeVar
 
 from bson import ObjectId
+from mm_concurrency import synchronized
+from mm_concurrency.async_scheduler import AsyncScheduler
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
-from mm_std import AsyncScheduler, Result, synchronized
+from mm_result import Result
 from pymongo import AsyncMongoClient
 
 from mm_base6.core.config import CoreConfig
@@ -111,7 +113,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REG
     async def reinit_scheduler(self) -> None:
         logger.debug("Reinitializing scheduler...")
         if self.scheduler.is_running():
-            self.scheduler.stop()
+            await self.scheduler.stop()
         self.scheduler.clear_tasks()
         if self.base_services.proxy.has_proxies_settings():
             self.scheduler.add_task("system_update_proxies", 60, self.base_services.proxy.update_proxies)
@@ -126,7 +128,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REG
             await self.system_log("app_start")
 
     async def shutdown(self) -> None:
-        self.scheduler.stop()
+        await self.scheduler.stop()
         if not self.core_config.debug:
             await self.system_log("app_stop")
         await self.stop()
@@ -163,7 +165,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REG
         pass
 
 
-type BaseCoreAny = BaseCore[DynamicConfigsModel, DynamicValuesModel, BaseDb]
+type BaseCoreAny = BaseCore[DynamicConfigsModel, DynamicValuesModel, BaseDb, Any]
 
 
 @dataclass

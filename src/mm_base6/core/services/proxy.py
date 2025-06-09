@@ -1,6 +1,8 @@
 from typing import cast
 
-from mm_std import async_synchronized, http_request, utc_now
+from mm_concurrency import async_synchronized
+from mm_http import http_request
+from mm_std import utc_now
 
 from mm_base6.core.dynamic_config import DynamicConfigStorage
 from mm_base6.core.dynamic_value import DynamicValueStorage

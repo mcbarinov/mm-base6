@@ -3,7 +3,7 @@ from typing import Any
 
 from bson import json_util
 from fastapi import APIRouter
-from mm_std import Result
+from mm_result import Result
 from starlette.responses import PlainTextResponse, Response
 
 from mm_base6.server.cbv import cbv
@@ -55,7 +55,7 @@ class CBV(BaseView):
 
     @router.post("/scheduler/stop")
     async def stop_scheduler(self) -> None:
-        self.core.scheduler.stop()
+        await self.core.scheduler.stop()
 
     @router.post("/scheduler/reinit")
     async def reinit_scheduler(self) -> None:

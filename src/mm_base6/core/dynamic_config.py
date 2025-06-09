@@ -4,8 +4,10 @@ import itertools
 from decimal import Decimal
 from typing import Any, ClassVar, cast, overload
 
+from mm_concurrency import synchronized
 from mm_mongo import AsyncMongoCollection
-from mm_std import Result, synchronized, utc_now
+from mm_result import Result
+from mm_std import utc_now
 
 from mm_base6.core.db import DynamicConfig, DynamicConfigType
 from mm_base6.core.errors import UnregisteredDynamicConfigError
@@ -82,9 +84,7 @@ class DynamicConfigStorage:
                 if typed_value_res.is_ok():
                     cls.storage[attr.key] = typed_value_res.unwrap()
                 else:
-                    await system_log(
-                        "dynamic_config.get_typed_value", {"error": typed_value_res.unwrap_error(), "attr": attr.key}
-                    )
+                    await system_log("dynamic_config.get_typed_value", {"error": typed_value_res.unwrap_err(), "attr": attr.key})
             else:  # create rows if not exists
                 await collection.insert_one(DynamicConfig(id=attr.key, type=type_, value=get_str_value(type_, attr.value)))
                 cls.storage[attr.key] = attr.value
@@ -105,7 +105,7 @@ class DynamicConfigStorage:
                     await cls.collection.set(key, {"value": str_value, "updated_at": utc_now()})
                     cls.storage[key] = type_value_res.unwrap()
                 else:
-                    await cls.system_log("DynamicConfigStorage.update", {"error": type_value_res.unwrap_error(), "key": key})
+                    await cls.system_log("DynamicConfigStorage.update", {"error": type_value_res.unwrap_err(), "key": key})
                     result = False
             else:
                 await cls.system_log("DynamicConfigStorage.update", {"error": "unknown key", "key": key})

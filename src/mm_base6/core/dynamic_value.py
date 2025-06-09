@@ -6,8 +6,9 @@ import itertools
 import pickle  # nosec: B403
 from typing import Any, ClassVar, cast, overload
 
+from mm_concurrency import synchronized
 from mm_mongo import AsyncMongoCollection
-from mm_std import synchronized, utc_now
+from mm_std import utc_now
 
 from mm_base6.core.db import DynamicValue
 from mm_base6.core.errors import UnregisteredDynamicValueError

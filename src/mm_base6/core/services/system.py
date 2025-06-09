@@ -12,7 +12,8 @@ import anyio
 import psutil
 import pydash
 from bson import ObjectId
-from mm_std import AsyncScheduler, utc_now
+from mm_concurrency.async_scheduler import AsyncScheduler
+from mm_std import utc_now
 from pydantic import BaseModel
 
 from mm_base6.core.config import CoreConfig

@@ -1,9 +1,9 @@
-from mm_std import toml_dumps, toml_loads
 from pydantic import BaseModel
 
 from mm_base6.core.dynamic_value import DynamicValueStorage
 from mm_base6.core.errors import UserError
 from mm_base6.core.services.system import SystemService
+from mm_base6.core.utils import toml_dumps, toml_loads
 
 
 class DynamicValuesInfo(BaseModel):

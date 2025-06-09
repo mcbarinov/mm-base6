@@ -4,7 +4,7 @@ import time
 from typing import Annotated
 
 from fastapi import APIRouter, File, UploadFile
-from mm_std import Result
+from mm_result import Result
 
 from app.server.deps import View
 from mm_base6 import UserError, cbv

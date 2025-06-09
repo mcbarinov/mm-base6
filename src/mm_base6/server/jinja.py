@@ -6,7 +6,7 @@ from typing import Any
 import mm_jinja
 from jinja2 import ChoiceLoader, Environment, PackageLoader
 from markupsafe import Markup
-from mm_std import http_request, json_dumps
+from mm_std import json_dumps
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
