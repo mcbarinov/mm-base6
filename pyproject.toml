@@ -4,20 +4,17 @@ version = "0.3.0"
 description = ""
 requires-python = ">=3.13"
 dependencies = [
+    "mm-std~=0.5.3",
+    "mm-concurrency~=0.1.0",
     "mm-mongo~=0.5.8",
     "mm-jinja~=0.0.5",
-    "mm-telegram~=0.3.0",
+    "mm-telegram~=0.3.1",
     "fastapi[standard]~=0.115.12",
     "itsdangerous~=2.2.0",
     "uvloop~=0.21.0",
     "psutil~=7.0.0",
-    "h11~=0.16.0", # security fix, remove after uvicorn upgrade
-    "mm-print>=0.0.3",
-    "mm-std~=0.5.1",
-    "mm-result>=0.0.3",
-    "mm-concurrency>=0.0.1",
-    "pydantic-settings>=2.9.1",
-    "tomlkit>=0.13.3",
+    "pydantic-settings~=2.9.1",
+    "tomlkit~=0.13.3",
 ]
 
 [build-system]
