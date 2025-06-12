@@ -12,4 +12,4 @@ async def get_core(request: Request) -> Core:
 
 
 class View(BaseView):
-    core: Core = Depends(get_core)
+    core: Core = Depends(get_core)  # type: ignore[assignment]

@@ -5,7 +5,7 @@ import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Self
 
 from bson import ObjectId
 from mm_concurrency import synchronized
@@ -24,17 +24,7 @@ from mm_base6.core.services.dynamic_value import DynamicValueService
 from mm_base6.core.services.proxy import ProxyService
 from mm_base6.core.services.system import SystemService
 from mm_base6.core.services.telegram import TelegramService
-from mm_base6.core.types import SERVICE_REGISTRY, SYSTEM_LOG
-
-DYNAMIC_CONFIGS_co = TypeVar("DYNAMIC_CONFIGS_co", bound=DynamicConfigsModel, covariant=True)
-DYNAMIC_VALUES_co = TypeVar("DYNAMIC_VALUES_co", bound=DynamicValuesModel, covariant=True)
-DB_co = TypeVar("DB_co", bound=BaseDb, covariant=True)
-
-
-DYNAMIC_CONFIGS = TypeVar("DYNAMIC_CONFIGS", bound=DynamicConfigsModel)
-DYNAMIC_VALUES = TypeVar("DYNAMIC_VALUES", bound=DynamicValuesModel)
-DB = TypeVar("DB", bound=BaseDb)
-
+from mm_base6.core.types import SYSTEM_LOG
 
 logger = logging.getLogger(__name__)
 
@@ -48,20 +38,18 @@ class BaseServices:
     telegram: TelegramService
 
 
-class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY], ABC):
+class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](ABC):
     core_config: CoreConfig
     scheduler: AsyncScheduler
     mongo_client: AsyncMongoClient[Any]
     database: AsyncDatabaseAny
-    db: DB_co
-    dynamic_configs: DYNAMIC_CONFIGS_co
-    dynamic_values: DYNAMIC_VALUES_co
-    services: SERVICE_REGISTRY
+    db: DB
+    dynamic_configs: DC
+    dynamic_values: DV
+    services: SR
     base_services: BaseServices
 
-    def __new__(
-        cls, *_args: object, **_kwargs: object
-    ) -> BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]:
+    def __new__(cls, *_args: object, **_kwargs: object) -> BaseCore[DC, DV, DB, SR]:
         raise TypeError("Use `BaseCore.init()` instead of direct instantiation.")
 
     @classmethod
@@ -73,10 +61,10 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REG
     async def base_init(
         cls,
         core_config: CoreConfig,
-        dynamic_configs_cls: type[DYNAMIC_CONFIGS_co],
-        dynamic_values_cls: type[DYNAMIC_VALUES_co],
-        db_cls: type[DB_co],
-        service_registry_cls: type[SERVICE_REGISTRY],
+        dynamic_configs_cls: type[DC],
+        dynamic_values_cls: type[DV],
+        db_cls: type[DB],
+        service_registry_cls: type[SR],
     ) -> Self:
         configure_logging(core_config.debug, core_config.data_dir)
         inst = super().__new__(cls)
@@ -142,7 +130,7 @@ class BaseCore(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REG
         await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
 
     @property
-    def base_service_params(self) -> BaseServiceParams[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]:
+    def base_service_params(self) -> BaseServiceParams[DC, DV, DB]:
         return BaseServiceParams(
             core_config=self.core_config,
             dynamic_configs=self.dynamic_configs,
@@ -169,20 +157,20 @@ type BaseCoreAny = BaseCore[DynamicConfigsModel, DynamicValuesModel, BaseDb, Any
 
 
 @dataclass
-class BaseServiceParams(Generic[DYNAMIC_CONFIGS, DYNAMIC_VALUES, DB]):
+class BaseServiceParams[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb]:
     core_config: CoreConfig
-    dynamic_configs: DYNAMIC_CONFIGS
-    dynamic_values: DYNAMIC_VALUES
+    dynamic_configs: DC
+    dynamic_values: DV
     db: DB
     system_log: SYSTEM_LOG
     send_telegram_message: Callable[[str], Coroutine[Any, Any, Result[list[int]]]]
 
 
-class BaseService(Generic[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]):
-    def __init__(self, base_params: BaseServiceParams[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co]) -> None:
+class BaseService[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb]:
+    def __init__(self, base_params: BaseServiceParams[DC, DV, DB]) -> None:
         self.core_config = base_params.core_config
-        self.dynamic_configs: DYNAMIC_CONFIGS_co = base_params.dynamic_configs
-        self.dynamic_values: DYNAMIC_VALUES_co = base_params.dynamic_values
+        self.dynamic_configs: DC = base_params.dynamic_configs
+        self.dynamic_values: DV = base_params.dynamic_values
         self.db = base_params.db
         self.system_log = base_params.system_log
         self.send_telegram_message = base_params.send_telegram_message

@@ -2,29 +2,35 @@ import asyncio
 import time
 from collections.abc import Coroutine
 from contextvars import Context
-from typing import Any, TypeVar
+from typing import Any, Protocol, Self
 
 import uvloop
 from fastapi import APIRouter
 from mm_telegram import TelegramBot, TelegramHandler
 
 from mm_base6.core.config import CoreConfig
-from mm_base6.core.core import BaseCore, DB_co, DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co
-from mm_base6.core.types import SERVICE_REGISTRY
+from mm_base6.core.core import BaseServices
 from mm_base6.server.config import ServerConfig
 from mm_base6.server.jinja import JinjaConfig
 from mm_base6.server.server import init_server
 from mm_base6.server.uvicorn import serve_uvicorn
 
-Core = TypeVar("Core", bound=BaseCore[Any, Any, Any, Any])
+
+class CoreProtocol(Protocol):
+    @classmethod
+    async def init(cls, core_config: CoreConfig) -> Self: ...
+    async def startup(self) -> None: ...
+
+    @property
+    def base_services(self) -> BaseServices: ...
 
 
-def run(
+def run[Core: CoreProtocol](
     *,
     core_config: CoreConfig,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]],
+    core_class: type[Core],
     telegram_handlers: list[TelegramHandler] | None = None,
     router: APIRouter,
     host: str,
@@ -46,12 +52,12 @@ def run(
     )
 
 
-async def _main(
+async def _main[Core: CoreProtocol](
     *,
     core_config: CoreConfig,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]],
+    core_class: type[Core],
     telegram_handlers: list[TelegramHandler] | None = None,
     router: APIRouter,
     host: str,
@@ -71,7 +77,7 @@ async def _main(
         if telegram_bot_settings and telegram_bot_settings.auto_start:
             await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 
-    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)
+    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)  # type: ignore[arg-type]
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 
 

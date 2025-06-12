@@ -18,9 +18,8 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Lifespan
 
 from mm_base6 import CoreConfig, ServerConfig
-from mm_base6.core.core import BaseCore, DB_co, DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co
+from mm_base6.core.core import BaseCoreAny
 from mm_base6.core.errors import UserError
-from mm_base6.core.types import SERVICE_REGISTRY
 from mm_base6.server import utils
 from mm_base6.server.jinja import JinjaConfig, init_env
 from mm_base6.server.middleware.auth import AccessTokenMiddleware
@@ -31,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def init_server(
-    core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY],
+    core: BaseCoreAny,
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
@@ -56,7 +55,7 @@ def init_server(
 # noinspection PyUnresolvedReferences
 def configure_state(
     app: FastAPI,
-    core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY],
+    core: BaseCoreAny,
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_env: Environment,
@@ -107,7 +106,7 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
         return PlainTextResponse(message, status_code=500)
 
 
-def configure_lifespan(core: BaseCore[DYNAMIC_CONFIGS_co, DYNAMIC_VALUES_co, DB_co, SERVICE_REGISTRY]) -> Lifespan[AppType]:
+def configure_lifespan(core: BaseCoreAny) -> Lifespan[AppType]:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: UP043
         try:
