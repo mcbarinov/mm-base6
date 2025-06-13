@@ -42,10 +42,5 @@ class BaseView[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb]:
     render: Render = Depends(get_render)
 
 
-# Non-generic version for internal library routers
-class InternalBaseView:
-    core: CoreProtocol[DynamicConfigsModel, DynamicValuesModel, BaseDb] = Depends(get_core)
-    telegram_bot: TelegramBot = Depends(get_telegram_bot)
-    server_config: ServerConfig = Depends(get_server_config)
-    form_data: FormData = Depends(get_form_data)
-    render: Render = Depends(get_render)
+# Type alias for internal library routers
+InternalBaseView = BaseView[DynamicConfigsModel, DynamicValuesModel, BaseDb]
