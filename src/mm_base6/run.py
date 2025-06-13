@@ -2,62 +2,23 @@ import asyncio
 import time
 from collections.abc import Coroutine
 from contextvars import Context
-from typing import Any, Protocol, Self
+from typing import Any
 
-import uvloop
 from fastapi import APIRouter
 from mm_telegram import TelegramBot, TelegramHandler
 
-from mm_base6.core.config import CoreConfig
-from mm_base6.core.core import BaseServices
+from mm_base6.core.core import CoreProtocol
 from mm_base6.server.config import ServerConfig
 from mm_base6.server.jinja import JinjaConfig
 from mm_base6.server.server import init_server
 from mm_base6.server.uvicorn import serve_uvicorn
 
 
-class CoreProtocol(Protocol):
-    @classmethod
-    async def init(cls, core_config: CoreConfig) -> Self: ...
-    async def startup(self) -> None: ...
-
-    @property
-    def base_services(self) -> BaseServices: ...
-
-
-def run[Core: CoreProtocol](
+async def run[CoreType: CoreProtocol[Any, Any, Any]](
     *,
-    core_config: CoreConfig,
+    core: CoreType,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    core_class: type[Core],
-    telegram_handlers: list[TelegramHandler] | None = None,
-    router: APIRouter,
-    host: str,
-    port: int,
-    uvicorn_log_level: str,
-) -> None:
-    uvloop.run(
-        _main(
-            core_config=core_config,
-            server_config=server_config,
-            core_class=core_class,
-            telegram_handlers=telegram_handlers,
-            router=router,
-            jinja_config=jinja_config,
-            host=host,
-            port=port,
-            uvicorn_log_level=uvicorn_log_level,
-        )
-    )
-
-
-async def _main[Core: CoreProtocol](
-    *,
-    core_config: CoreConfig,
-    server_config: ServerConfig,
-    jinja_config: JinjaConfig,
-    core_class: type[Core],
     telegram_handlers: list[TelegramHandler] | None = None,
     router: APIRouter,
     host: str,
@@ -67,7 +28,7 @@ async def _main[Core: CoreProtocol](
     loop = asyncio.get_running_loop()
     loop.set_task_factory(_custom_task_factory)
 
-    core = await core_class.init(core_config)
+    # Core startup is already handled in Core.init, just call startup hook
     await core.startup()
 
     telegram_bot = None
@@ -77,7 +38,7 @@ async def _main[Core: CoreProtocol](
         if telegram_bot_settings and telegram_bot_settings.auto_start:
             await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 
-    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)  # type: ignore[arg-type]
+    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from mm_base6 import BaseService
 
 if TYPE_CHECKING:
-    from app.core.core import Core
+    from app.settings import AppCore
 
 
 class ThreadSafeCounter:
@@ -21,9 +21,10 @@ class ThreadSafeCounter:
             return self.value
 
 
-class MiscService(BaseService["Core"]):
-    def __init__(self, core: "Core") -> None:
-        super().__init__(core)
+class MiscService(BaseService):
+    core: "AppCore"
+
+    def __init__(self) -> None:
         self.counter = ThreadSafeCounter()
 
     def increment_counter(self) -> int:

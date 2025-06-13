@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 import os
-from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, Self
+from typing import TYPE_CHECKING, Any, Protocol
 
 from bson import ObjectId
 
@@ -47,11 +47,12 @@ class CoreProtocol[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
     database: AsyncDatabaseAny
     scheduler: AsyncScheduler
 
+    async def startup(self) -> None: ...
     async def shutdown(self) -> None: ...
     async def reinit_scheduler(self) -> None: ...
 
 
-class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](ABC):
+class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
     core_config: CoreConfig
     scheduler: AsyncScheduler
     mongo_client: AsyncMongoClient[Any]
@@ -62,23 +63,26 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
     services: SR
     base_services: BaseServices
 
-    def __new__(cls, *_args: object, **_kwargs: object) -> BaseCore[DC, DV, DB, SR]:
-        raise TypeError("Use `BaseCore.init()` instead of direct instantiation.")
+    # User-provided functions
+    _configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], None] | None
+    _start_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None
+    _stop_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None
+
+    def __new__(cls, *_args: object, **_kwargs: object) -> Core[DC, DV, DB, SR]:
+        raise TypeError("Use `Core.init()` instead of direct instantiation.")
 
     @classmethod
-    @abstractmethod
-    async def init(cls, core_config: CoreConfig) -> Self:
-        pass
-
-    @classmethod
-    async def base_init(
+    async def init(
         cls,
         core_config: CoreConfig,
         dynamic_configs_cls: type[DC],
         dynamic_values_cls: type[DV],
         db_cls: type[DB],
-        service_registry_cls: type[SR],
-    ) -> Self:
+        create_services_fn: Callable[[], SR],
+        configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
+        start_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
+        stop_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
+    ) -> Core[DC, DV, DB, SR]:
         configure_logging(core_config.debug, core_config.data_dir)
         inst = super().__new__(cls)
         inst.core_config = core_config
@@ -87,7 +91,11 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
         inst.mongo_client = conn.client
         inst.database = conn.database
         inst.db = await db_cls.init_collections(conn.database)
-        inst.services = service_registry_cls()
+
+        # Store user functions
+        inst._configure_scheduler_fn = configure_scheduler_fn
+        inst._start_core_fn = start_core_fn
+        inst._stop_core_fn = stop_core_fn
 
         # base services
         system_service = SystemService(core_config, inst.db, inst.scheduler)
@@ -108,7 +116,19 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
         )
         inst.dynamic_values = await DynamicValueStorage.init_storage(inst.db.dynamic_value, dynamic_values_cls)
 
+        # Create and inject services
+        inst.services = create_services_fn()
+        await inst._inject_core_into_services()
+
         return inst
+
+    async def _inject_core_into_services(self) -> None:
+        """Inject core into all user services."""
+        for attr_name in dir(self.services):
+            if not attr_name.startswith("_"):
+                service = getattr(self.services, attr_name)
+                if isinstance(service, BaseService):
+                    service.core = self
 
     @synchronized
     async def reinit_scheduler(self) -> None:
@@ -142,42 +162,29 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
         logger.debug("system_log %s %s", category, data)
         await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
 
-    @abstractmethod
     async def configure_scheduler(self) -> None:
-        pass
+        """Call user-provided scheduler configuration function."""
+        if self._configure_scheduler_fn:
+            self._configure_scheduler_fn(self)
 
-    @abstractmethod
     async def start(self) -> None:
-        pass
+        """Call user-provided start function."""
+        if self._start_core_fn:
+            self._start_core_fn(self)
 
-    @abstractmethod
     async def stop(self) -> None:
-        pass
+        """Call user-provided stop function."""
+        if self._stop_core_fn:
+            self._stop_core_fn(self)
 
 
-class BaseService[C]:
-    def __init__(self, core: C) -> None:
-        self.core = core
+class BaseService:
+    """Base class for user services. Core will be automatically injected."""
 
-    # Convenience properties for common operations
-    @property
-    def core_config(self) -> CoreConfig:
-        return self.core.core_config  # type: ignore[attr-defined,no-any-return]
-
-    @property
-    def dynamic_configs(self) -> object:
-        return self.core.dynamic_configs  # type: ignore[attr-defined]
-
-    @property
-    def dynamic_values(self) -> object:
-        return self.core.dynamic_values  # type: ignore[attr-defined]
-
-    @property
-    def db(self) -> object:
-        return self.core.db  # type: ignore[attr-defined]
+    core: Any  # Will be properly typed by user with type alias
 
     async def system_log(self, category: str, data: object = None) -> None:
-        await self.core.base_services.system.system_log(category, data)  # type: ignore[attr-defined]
+        await self.core.base_services.system.system_log(category, data)
 
     async def send_telegram_message(self, message: str) -> object:
-        return await self.core.base_services.telegram.send_message(message)  # type: ignore[attr-defined]
+        return await self.core.base_services.telegram.send_message(message)

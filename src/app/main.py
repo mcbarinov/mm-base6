@@ -1,16 +1,34 @@
-from app import settings, telegram_handlers
-from app.core.core import Core
-from app.server import jinja
-from mm_base6 import run
+import asyncio
 
-run(
-    core_config=settings.core_config,
-    server_config=settings.server_config,
-    core_class=Core,
-    telegram_handlers=telegram_handlers.handlers,
-    router=settings.get_router(),
-    jinja_config=jinja.jinja_config,
-    host="0.0.0.0",  # noqa: S104 # nosec
-    port=3000,
-    uvicorn_log_level="warning",
-)
+from app import settings, telegram_handlers
+from app.server import jinja
+from mm_base6 import Core, run
+
+
+async def main() -> None:
+    # Initialize Core with all required parameters
+    core = await Core.init(
+        core_config=settings.core_config,
+        dynamic_configs_cls=settings.DynamicConfigs,
+        dynamic_values_cls=settings.DynamicValues,
+        db_cls=settings.Db,
+        create_services_fn=settings.create_services,
+        configure_scheduler_fn=settings.configure_scheduler,
+        start_core_fn=settings.start_core,
+        stop_core_fn=settings.stop_core,
+    )
+
+    await run(
+        core=core,
+        server_config=settings.server_config,
+        telegram_handlers=telegram_handlers.handlers,
+        router=settings.get_router(),
+        jinja_config=jinja.jinja_config,
+        host="0.0.0.0",  # noqa: S104 # nosec
+        port=3000,
+        uvicorn_log_level="warning",
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -10,14 +10,13 @@ from app.core.db import Data, DataStatus
 from mm_base6 import BaseService
 
 if TYPE_CHECKING:
-    from app.core.core import Core
+    from app.settings import AppCore
 
 logger = logging.getLogger(__name__)
 
 
-class DataService(BaseService["Core"]):
-    def __init__(self, core: "Core") -> None:
-        super().__init__(core)
+class DataService(BaseService):
+    core: "AppCore"
 
     async def generate_one(self) -> MongoInsertOneResult:
         status = random.choice(list(DataStatus))
