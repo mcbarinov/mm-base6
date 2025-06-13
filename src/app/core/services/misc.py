@@ -1,10 +1,7 @@
 import threading
-from typing import TYPE_CHECKING
 
+from app.core.types import AppCore
 from mm_base6 import BaseService
-
-if TYPE_CHECKING:
-    from app.settings import AppCore
 
 
 class ThreadSafeCounter:
@@ -22,7 +19,7 @@ class ThreadSafeCounter:
 
 
 class MiscService(BaseService):
-    core: "AppCore"
+    core: AppCore
 
     def __init__(self) -> None:
         self.counter = ThreadSafeCounter()

@@ -7,10 +7,10 @@ clean:
 	rm -rf .pytest_cache .ruff_cache .mypy_cache build dist src/*.egg-info
 
 sync:
-    uv sync
+    uv sync --all-extras
 
 build: clean lint audit test
-    uv build --wheel --package mm-base6
+    uv build --package mm-base6
 
 format:
     uv run ruff check --select I --fix src tests
@@ -21,8 +21,10 @@ lint: format
     uv run mypy src
 
 audit:
-    uv run pip-audit
-    uv run bandit -r -c "pyproject.toml" src
+    uv export --no-dev --all-extras --format requirements-txt --no-emit-project > requirements.txt
+    uv run pip-audit -r requirements.txt --disable-pip
+    rm requirements.txt
+    uv run bandit --silent --recursive --configfile "pyproject.toml" src
 
 test:
     uv run pytest tests

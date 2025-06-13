@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from collections.abc import Callable, Coroutine
 from decimal import Decimal
 from typing import Any, ClassVar, cast, overload
 
@@ -11,8 +12,9 @@ from mm_std import utc_now
 
 from mm_base6.core.db import DynamicConfig, DynamicConfigType
 from mm_base6.core.errors import UnregisteredDynamicConfigError
-from mm_base6.core.types import SYSTEM_LOG
 from mm_base6.core.utils import get_registered_public_attributes
+
+type SYSTEM_LOG = Callable[[str, object], Coroutine[Any, Any, None]]
 
 
 class DC[T: (str, bool, int, float, Decimal)]:

@@ -7,13 +7,13 @@ from mm_result import Result
 from starlette.responses import PlainTextResponse, Response
 
 from mm_base6.server.cbv import cbv
-from mm_base6.server.deps import InternalBaseView
+from mm_base6.server.deps import InternalView
 
 router: APIRouter = APIRouter(prefix="/api/system", tags=["system"])
 
 
 @cbv(router)
-class CBV(InternalBaseView):
+class CBV(InternalView):
     @router.get("/stats")
     async def get_stats(self) -> dict[str, object]:
         psutil_stats = await self.core.base_services.system.get_psutil_stats()

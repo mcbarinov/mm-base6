@@ -5,14 +5,14 @@ from starlette.responses import PlainTextResponse
 
 from mm_base6 import ServerConfig
 from mm_base6.server.cbv import cbv
-from mm_base6.server.deps import InternalBaseView
+from mm_base6.server.deps import InternalView
 from mm_base6.server.middleware.auth import ACCESS_TOKEN_NAME
 
 router: APIRouter = APIRouter(include_in_schema=False)
 
 
 @cbv(router)
-class CBV(InternalBaseView):
+class CBV(InternalView):
     @router.get("/api-post/{url:path}")
     async def api_post(self, url: str, request: Request) -> object:
         return await _api_method("post", url, self.server_config, request)

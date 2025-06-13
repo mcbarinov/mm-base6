@@ -1,18 +1,19 @@
 import asyncio
 
 from app import settings, telegram_handlers
+from app.core.db import Db
+from app.core.services import ServiceRegistry
 from app.server import jinja
 from mm_base6 import Core, run
 
 
 async def main() -> None:
-    # Initialize Core with all required parameters
     core = await Core.init(
         core_config=settings.core_config,
         dynamic_configs_cls=settings.DynamicConfigs,
         dynamic_values_cls=settings.DynamicValues,
-        db_cls=settings.Db,
-        create_services_fn=settings.create_services,
+        db_cls=Db,
+        service_registry_cls=ServiceRegistry,
         configure_scheduler_fn=settings.configure_scheduler,
         start_core_fn=settings.start_core,
         stop_core_fn=settings.stop_core,

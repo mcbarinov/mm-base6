@@ -4,14 +4,14 @@ from fastapi import APIRouter, Form, Query
 from starlette.responses import HTMLResponse, RedirectResponse
 
 from mm_base6.server.cbv import cbv
-from mm_base6.server.deps import InternalBaseView
+from mm_base6.server.deps import InternalView
 from mm_base6.server.utils import redirect
 
 router: APIRouter = APIRouter(prefix="/system", include_in_schema=False)
 
 
 @cbv(router)
-class PageCBV(InternalBaseView):
+class PageCBV(InternalView):
     @router.get("/")
     async def system_page(self) -> HTMLResponse:
         telegram_message_settings = self.core.base_services.telegram.get_message_settings()
@@ -63,7 +63,7 @@ class PageCBV(InternalBaseView):
 
 
 @cbv(router)
-class ActionCBV(InternalBaseView):
+class ActionCBV(InternalView):
     @router.post("/dynamic-configs")
     async def update_dynamic_configs(self) -> RedirectResponse:
         data = cast(dict[str, str], self.form_data)

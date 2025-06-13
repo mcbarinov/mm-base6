@@ -5,14 +5,14 @@ from starlette import status
 from starlette.responses import HTMLResponse, RedirectResponse
 
 from mm_base6.server.cbv import cbv
-from mm_base6.server.deps import InternalBaseView
+from mm_base6.server.deps import InternalView
 from mm_base6.server.middleware.auth import ACCESS_TOKEN_NAME
 
 router: APIRouter = APIRouter(prefix="/auth", include_in_schema=False)
 
 
 @cbv(router)
-class CBV(InternalBaseView):
+class CBV(InternalView):
     @router.get("/login")
     async def login_page(self) -> HTMLResponse:
         return await self.render.html("login.j2")

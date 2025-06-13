@@ -1,16 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from fastapi import APIRouter
 from mm_std import utc_now
 
-from app.core.db import Db
-from mm_base6 import DC, DV, Core, CoreConfig, DynamicConfigsModel, DynamicValuesModel, ServerConfig
-
-if TYPE_CHECKING:
-    from app.core.services.data import DataService
-    from app.core.services.misc import MiscService
+from app.core.types import AppCore
+from mm_base6 import DC, DV, CoreConfig, DynamicConfigsModel, DynamicValuesModel, ServerConfig
 
 core_config = CoreConfig()
 
@@ -37,43 +32,6 @@ class DynamicValues(DynamicValuesModel):
     tmp2 = DV("bla")
     processed_block = DV(111, "bla bla about processed_block")
     last_checked_at = DV(utc_now(), "bla bla about last_checked_at", False)
-
-
-class ServiceRegistry:
-    data: "DataService"
-    misc: "MiscService"
-
-
-def create_services() -> ServiceRegistry:
-    """Create and return user services."""
-    # Import here to avoid circular imports
-    from app.core.services.data import DataService
-    from app.core.services.misc import MiscService
-
-    registry = ServiceRegistry()
-    registry.data = DataService()
-    registry.misc = MiscService()
-    return registry
-
-
-# Create typed Core alias
-AppCore = Core[DynamicConfigs, DynamicValues, Db, ServiceRegistry]
-
-# Export for use in other modules
-__all__ = [
-    "AppCore",
-    "Db",
-    "DynamicConfigs",
-    "DynamicValues",
-    "ServiceRegistry",
-    "configure_scheduler",
-    "core_config",
-    "create_services",
-    "get_router",
-    "server_config",
-    "start_core",
-    "stop_core",
-]
 
 
 def configure_scheduler(core: AppCore) -> None:

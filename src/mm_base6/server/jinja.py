@@ -40,8 +40,8 @@ async def empty_markup(_: object) -> Markup:
     return Markup("")
 
 
-def init_env[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
-    core: CoreProtocol[DC, DV, DB], server_config: ServerConfig, jinja_config: JinjaConfig
+def init_env[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
+    core: CoreProtocol[DC, DV, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig
 ) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 

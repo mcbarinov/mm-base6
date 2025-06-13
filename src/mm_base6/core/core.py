@@ -4,12 +4,9 @@ import logging
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol
 
 from bson import ObjectId
-
-if TYPE_CHECKING:
-    pass
 from mm_concurrency import synchronized
 from mm_concurrency.async_scheduler import AsyncScheduler
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
@@ -38,11 +35,12 @@ class BaseServices:
     telegram: TelegramService
 
 
-class CoreProtocol[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](Protocol):
+class CoreProtocol[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](Protocol):
     core_config: CoreConfig
     dynamic_configs: DC
     dynamic_values: DV
     db: DB
+    services: SR
     base_services: BaseServices
     database: AsyncDatabaseAny
     scheduler: AsyncScheduler
@@ -78,7 +76,7 @@ class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
         dynamic_configs_cls: type[DC],
         dynamic_values_cls: type[DV],
         db_cls: type[DB],
-        create_services_fn: Callable[[], SR],
+        service_registry_cls: type[SR],
         configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
         start_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
         stop_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
@@ -117,7 +115,7 @@ class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
         inst.dynamic_values = await DynamicValueStorage.init_storage(inst.db.dynamic_value, dynamic_values_cls)
 
         # Create and inject services
-        inst.services = create_services_fn()
+        inst.services = cls._create_services_from_registry_class(service_registry_cls)
         await inst._inject_core_into_services()
 
         return inst
@@ -176,6 +174,27 @@ class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
         """Call user-provided stop function."""
         if self._stop_core_fn:
             self._stop_core_fn(self)
+
+    @staticmethod
+    def _create_services_from_registry_class(registry_cls: type[SR]) -> SR:
+        """Automatically create service instances from ServiceRegistry class annotations."""
+        from typing import get_type_hints
+
+        registry = registry_cls()
+
+        # Get type annotations from the class, resolving string annotations safely
+        try:
+            annotations = get_type_hints(registry_cls)
+        except (NameError, AttributeError):
+            # Fallback to raw annotations if type hints can't be resolved
+            annotations = getattr(registry_cls, "__annotations__", {})
+
+        for attr_name, service_type_hint in annotations.items():
+            # Create service instance
+            service_instance = service_type_hint()
+            setattr(registry, attr_name, service_instance)
+
+        return registry
 
 
 class BaseService:

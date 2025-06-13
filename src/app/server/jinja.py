@@ -1,7 +1,7 @@
 from markupsafe import Markup
 
 from app.core.db import DataStatus
-from app.settings import AppCore
+from app.core.types import AppCore
 from mm_base6 import JinjaConfig
 
 

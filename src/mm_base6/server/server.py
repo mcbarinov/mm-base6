@@ -31,8 +31,8 @@ from mm_base6.server.routers import base_router
 logger = logging.getLogger(__name__)
 
 
-def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
-    core: CoreProtocol[DC, DV, DB],
+def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
+    core: CoreProtocol[DC, DV, DB, SR],
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
@@ -55,9 +55,9 @@ def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
 
 
 # noinspection PyUnresolvedReferences
-def configure_state[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
+def configure_state[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
     app: FastAPI,
-    core: CoreProtocol[DC, DV, DB],
+    core: CoreProtocol[DC, DV, DB, SR],
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_env: Environment,
@@ -108,8 +108,8 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
         return PlainTextResponse(message, status_code=500)
 
 
-def configure_lifespan[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
-    core: CoreProtocol[DC, DV, DB],
+def configure_lifespan[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
+    core: CoreProtocol[DC, DV, DB, SR],
 ) -> Lifespan[FastAPI]:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: UP043

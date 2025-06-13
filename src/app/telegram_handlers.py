@@ -4,7 +4,7 @@ from mm_telegram import TelegramHandler
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
-from app.settings import AppCore
+from app.core.types import AppCore
 
 
 async def data_generate_one(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

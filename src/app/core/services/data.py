@@ -1,22 +1,19 @@
 import logging
 import random
-from typing import TYPE_CHECKING
 
 from bson import ObjectId
 from mm_http import http_request
 from mm_mongo import MongoInsertManyResult, MongoInsertOneResult
 
 from app.core.db import Data, DataStatus
+from app.core.types import AppCore
 from mm_base6 import BaseService
-
-if TYPE_CHECKING:
-    from app.settings import AppCore
 
 logger = logging.getLogger(__name__)
 
 
 class DataService(BaseService):
-    core: "AppCore"
+    core: AppCore
 
     async def generate_one(self) -> MongoInsertOneResult:
         status = random.choice(list(DataStatus))

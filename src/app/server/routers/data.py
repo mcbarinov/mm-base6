@@ -3,14 +3,14 @@ from fastapi import APIRouter
 from mm_mongo import MongoDeleteResult, MongoInsertManyResult, MongoInsertOneResult, MongoUpdateResult
 
 from app.core.db import Data
-from app.server.deps import View
+from app.core.types import AppView
 from mm_base6 import cbv
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
 
 @cbv(router)
-class CBV(View):
+class CBV(AppView):
     @router.post("/generate-one")
     async def generate_one(self) -> MongoInsertOneResult:
         return await self.core.services.data.generate_one()

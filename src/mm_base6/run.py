@@ -14,7 +14,7 @@ from mm_base6.server.server import init_server
 from mm_base6.server.uvicorn import serve_uvicorn
 
 
-async def run[CoreType: CoreProtocol[Any, Any, Any]](
+async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
     *,
     core: CoreType,
     server_config: ServerConfig,

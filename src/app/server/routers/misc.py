@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, File, UploadFile
 from mm_result import Result
 
-from app.server.deps import View
+from app.core.types import AppView
 from mm_base6 import UserError, cbv
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/misc", tags=["misc"])
 
 
 @cbv(router)
-class CBV(View):
+class CBV(AppView):
     @router.get("/user-error")
     async def user_error(self) -> str:
         raise UserError("user bla bla bla")
