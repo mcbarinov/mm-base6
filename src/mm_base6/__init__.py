@@ -1,7 +1,6 @@
 from .core.config import CoreConfig as CoreConfig
 from .core.core import BaseCore as BaseCore
 from .core.core import BaseService as BaseService
-from .core.core import BaseServiceParams as BaseServiceParams
 from .core.core import CoreProtocol as CoreProtocol
 from .core.db import BaseDb as BaseDb
 from .core.dynamic_config import DC as DC

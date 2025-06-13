@@ -27,7 +27,8 @@ class PageCBV(View):
 
     @router.get("/misc")
     async def misc(self) -> HTMLResponse:
-        return await self.render.html("misc.j2", zero=0)
+        counter = self.core.services.misc.counter.get()
+        return await self.render.html("misc.j2", zero=0, counter=counter)
 
 
 @cbv(router)

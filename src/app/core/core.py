@@ -16,8 +16,8 @@ class Core(BaseCore[DynamicConfigs, DynamicValues, Db, ServiceRegistry]):
     @classmethod
     async def init(cls, core_config: CoreConfig) -> Self:
         res = await super().base_init(core_config, DynamicConfigs, DynamicValues, Db, ServiceRegistry)
-        res.services.data = DataService(res.base_service_params)
-        res.services.misc = MiscService(res.base_service_params)
+        res.services.data = DataService(res)
+        res.services.misc = MiscService(res)
 
         return res
 

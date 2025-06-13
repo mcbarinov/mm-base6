@@ -3,15 +3,16 @@ from __future__ import annotations
 import logging
 import os
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Protocol, Self
+from typing import TYPE_CHECKING, Any, Protocol, Self
 
 from bson import ObjectId
+
+if TYPE_CHECKING:
+    pass
 from mm_concurrency import synchronized
 from mm_concurrency.async_scheduler import AsyncScheduler
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
-from mm_result import Result
 from pymongo import AsyncMongoClient
 
 from mm_base6.core.config import CoreConfig
@@ -24,7 +25,6 @@ from mm_base6.core.services.dynamic_value import DynamicValueService
 from mm_base6.core.services.proxy import ProxyService
 from mm_base6.core.services.system import SystemService
 from mm_base6.core.services.telegram import TelegramService
-from mm_base6.core.types import SYSTEM_LOG
 
 logger = logging.getLogger(__name__)
 
@@ -142,17 +142,6 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
         logger.debug("system_log %s %s", category, data)
         await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
 
-    @property
-    def base_service_params(self) -> BaseServiceParams[DC, DV, DB]:
-        return BaseServiceParams(
-            core_config=self.core_config,
-            dynamic_configs=self.dynamic_configs,
-            dynamic_values=self.dynamic_values,
-            db=self.db,
-            system_log=self.system_log,
-            send_telegram_message=self.base_services.telegram.send_message,
-        )
-
     @abstractmethod
     async def configure_scheduler(self) -> None:
         pass
@@ -166,21 +155,29 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
         pass
 
 
-@dataclass
-class BaseServiceParams[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb]:
-    core_config: CoreConfig
-    dynamic_configs: DC
-    dynamic_values: DV
-    db: DB
-    system_log: SYSTEM_LOG
-    send_telegram_message: Callable[[str], Coroutine[Any, Any, Result[list[int]]]]
+class BaseService[C]:
+    def __init__(self, core: C) -> None:
+        self.core = core
 
+    # Convenience properties for common operations
+    @property
+    def core_config(self) -> CoreConfig:
+        return self.core.core_config  # type: ignore[attr-defined,no-any-return]
 
-class BaseService[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb]:
-    def __init__(self, base_params: BaseServiceParams[DC, DV, DB]) -> None:
-        self.core_config = base_params.core_config
-        self.dynamic_configs: DC = base_params.dynamic_configs
-        self.dynamic_values: DV = base_params.dynamic_values
-        self.db = base_params.db
-        self.system_log = base_params.system_log
-        self.send_telegram_message = base_params.send_telegram_message
+    @property
+    def dynamic_configs(self) -> object:
+        return self.core.dynamic_configs  # type: ignore[attr-defined]
+
+    @property
+    def dynamic_values(self) -> object:
+        return self.core.dynamic_values  # type: ignore[attr-defined]
+
+    @property
+    def db(self) -> object:
+        return self.core.db  # type: ignore[attr-defined]
+
+    async def system_log(self, category: str, data: object = None) -> None:
+        await self.core.base_services.system.system_log(category, data)  # type: ignore[attr-defined]
+
+    async def send_telegram_message(self, message: str) -> object:
+        return await self.core.base_services.telegram.send_message(message)  # type: ignore[attr-defined]
