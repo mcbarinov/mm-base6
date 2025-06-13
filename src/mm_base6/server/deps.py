@@ -6,12 +6,15 @@ from mm_telegram import TelegramBot
 from starlette.datastructures import FormData
 
 from mm_base6 import ServerConfig
-from mm_base6.core.core import BaseCoreAny
+from mm_base6.core.core import CoreProtocol
+from mm_base6.core.db import BaseDb
+from mm_base6.core.dynamic_config import DynamicConfigsModel
+from mm_base6.core.dynamic_value import DynamicValuesModel
 from mm_base6.server.jinja import Render
 
 
-async def get_core(request: Request) -> BaseCoreAny:
-    return cast(BaseCoreAny, request.app.state.core)
+async def get_core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](request: Request) -> CoreProtocol[DC, DV, DB]:
+    return cast(CoreProtocol[DC, DV, DB], request.app.state.core)
 
 
 async def get_render(request: Request) -> Render:
@@ -31,8 +34,17 @@ async def get_telegram_bot(request: Request) -> TelegramBot:
     return cast(TelegramBot, request.app.state.telegram_bot)
 
 
-class BaseView:
-    core: BaseCoreAny = Depends(get_core)
+class BaseView[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb]:
+    core: CoreProtocol[DC, DV, DB] = Depends(get_core)
+    telegram_bot: TelegramBot = Depends(get_telegram_bot)
+    server_config: ServerConfig = Depends(get_server_config)
+    form_data: FormData = Depends(get_form_data)
+    render: Render = Depends(get_render)
+
+
+# Non-generic version for internal library routers
+class InternalBaseView:
+    core: CoreProtocol[DynamicConfigsModel, DynamicValuesModel, BaseDb] = Depends(get_core)
     telegram_bot: TelegramBot = Depends(get_telegram_bot)
     server_config: ServerConfig = Depends(get_server_config)
     form_data: FormData = Depends(get_form_data)

@@ -5,7 +5,7 @@ import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import Any, Protocol, Self
 
 from bson import ObjectId
 from mm_concurrency import synchronized
@@ -36,6 +36,19 @@ class BaseServices:
     proxy: ProxyService
     system: SystemService
     telegram: TelegramService
+
+
+class CoreProtocol[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](Protocol):
+    core_config: CoreConfig
+    dynamic_configs: DC
+    dynamic_values: DV
+    db: DB
+    base_services: BaseServices
+    database: AsyncDatabaseAny
+    scheduler: AsyncScheduler
+
+    async def shutdown(self) -> None: ...
+    async def reinit_scheduler(self) -> None: ...
 
 
 class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](ABC):
@@ -151,9 +164,6 @@ class BaseCore[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
     @abstractmethod
     async def stop(self) -> None:
         pass
-
-
-type BaseCoreAny = BaseCore[DynamicConfigsModel, DynamicValuesModel, BaseDb, Any]
 
 
 @dataclass

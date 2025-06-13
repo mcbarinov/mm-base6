@@ -10,7 +10,10 @@ from mm_std import json_dumps
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from mm_base6.core.core import BaseCoreAny
+from mm_base6.core.core import CoreProtocol
+from mm_base6.core.db import BaseDb
+from mm_base6.core.dynamic_config import DynamicConfigsModel
+from mm_base6.core.dynamic_value import DynamicValuesModel
 from mm_base6.server import utils
 from mm_base6.server.config import ServerConfig
 
@@ -37,7 +40,9 @@ async def empty_markup(_: object) -> Markup:
     return Markup("")
 
 
-def init_env(core: BaseCoreAny, server_config: ServerConfig, jinja_config: JinjaConfig) -> Environment:
+def init_env[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
+    core: CoreProtocol[DC, DV, DB], server_config: ServerConfig, jinja_config: JinjaConfig
+) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 
     header_info = jinja_config.header_info if jinja_config.header_info else empty_markup

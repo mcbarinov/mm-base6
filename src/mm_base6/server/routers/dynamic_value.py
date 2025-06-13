@@ -3,13 +3,13 @@ from starlette.responses import PlainTextResponse
 
 from mm_base6.core.db import DynamicValue
 from mm_base6.server.cbv import cbv
-from mm_base6.server.deps import BaseView
+from mm_base6.server.deps import InternalBaseView
 
 router: APIRouter = APIRouter(prefix="/api/system/dynamic-values", tags=["system"])
 
 
 @cbv(router)
-class CBV(BaseView):
+class CBV(InternalBaseView):
     @router.get("/toml", response_class=PlainTextResponse)
     async def get_dynamic_values_as_toml(self) -> str:
         return self.core.base_services.dynamic_value.export_dynamic_values_as_toml()

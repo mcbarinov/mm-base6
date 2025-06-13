@@ -4,13 +4,13 @@ from mm_mongo import MongoDeleteResult
 
 from mm_base6.core.db import SystemLog
 from mm_base6.server.cbv import cbv
-from mm_base6.server.deps import BaseView
+from mm_base6.server.deps import InternalBaseView
 
 router: APIRouter = APIRouter(prefix="/api/system/system-logs", tags=["system"])
 
 
 @cbv(router)
-class CBV(BaseView):
+class CBV(InternalBaseView):
     @router.get("/{id}")
     async def get_system_log(self, id: ObjectId) -> SystemLog:
         return await self.core.db.system_log.get(id)

@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
-from fastapi.applications import AppType
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from jinja2 import Environment
@@ -18,7 +17,10 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Lifespan
 
 from mm_base6 import CoreConfig, ServerConfig
-from mm_base6.core.core import BaseCoreAny
+from mm_base6.core.core import CoreProtocol
+from mm_base6.core.db import BaseDb
+from mm_base6.core.dynamic_config import DynamicConfigsModel
+from mm_base6.core.dynamic_value import DynamicValuesModel
 from mm_base6.core.errors import UserError
 from mm_base6.server import utils
 from mm_base6.server.jinja import JinjaConfig, init_env
@@ -29,8 +31,8 @@ from mm_base6.server.routers import base_router
 logger = logging.getLogger(__name__)
 
 
-def init_server(
-    core: BaseCoreAny,
+def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
+    core: CoreProtocol[DC, DV, DB],
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
@@ -53,9 +55,9 @@ def init_server(
 
 
 # noinspection PyUnresolvedReferences
-def configure_state(
+def configure_state[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
     app: FastAPI,
-    core: BaseCoreAny,
+    core: CoreProtocol[DC, DV, DB],
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_env: Environment,
@@ -106,7 +108,9 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
         return PlainTextResponse(message, status_code=500)
 
 
-def configure_lifespan(core: BaseCoreAny) -> Lifespan[AppType]:
+def configure_lifespan[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb](
+    core: CoreProtocol[DC, DV, DB],
+) -> Lifespan[FastAPI]:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: UP043
         try:
