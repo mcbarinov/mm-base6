@@ -34,16 +34,16 @@ class DynamicValues(DynamicValuesModel):
     last_checked_at = DV(utc_now(), "bla bla about last_checked_at", False)
 
 
-def configure_scheduler(core: AppCore) -> None:
+async def configure_scheduler(core: AppCore) -> None:
     """Configure background scheduler tasks."""
     core.scheduler.add_task("generate_one", 60, core.services.data.generate_one)
 
 
-def start_core(core: AppCore) -> None:
+async def start_core(core: AppCore) -> None:
     """Startup logic for the application."""
 
 
-def stop_core(core: AppCore) -> None:
+async def stop_core(core: AppCore) -> None:
     """Cleanup logic for the application."""
 
 

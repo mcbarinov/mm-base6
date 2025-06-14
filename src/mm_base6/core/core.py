@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -62,9 +62,9 @@ class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
     base_services: BaseServices
 
     # User-provided functions
-    _configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], None] | None
-    _start_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None
-    _stop_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None
+    _configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], Awaitable[None]] | None
+    _start_core_fn: Callable[[Core[DC, DV, DB, SR]], Awaitable[None]] | None
+    _stop_core_fn: Callable[[Core[DC, DV, DB, SR]], Awaitable[None]] | None
 
     def __new__(cls, *_args: object, **_kwargs: object) -> Core[DC, DV, DB, SR]:
         raise TypeError("Use `Core.init()` instead of direct instantiation.")
@@ -77,9 +77,9 @@ class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
         dynamic_values_cls: type[DV],
         db_cls: type[DB],
         service_registry_cls: type[SR],
-        configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
-        start_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
-        stop_core_fn: Callable[[Core[DC, DV, DB, SR]], None] | None = None,
+        configure_scheduler_fn: Callable[[Core[DC, DV, DB, SR]], Awaitable[None]] | None = None,
+        start_core_fn: Callable[[Core[DC, DV, DB, SR]], Awaitable[None]] | None = None,
+        stop_core_fn: Callable[[Core[DC, DV, DB, SR]], Awaitable[None]] | None = None,
     ) -> Core[DC, DV, DB, SR]:
         configure_logging(core_config.debug, core_config.data_dir)
         inst = super().__new__(cls)
@@ -163,17 +163,17 @@ class Core[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]:
     async def configure_scheduler(self) -> None:
         """Call user-provided scheduler configuration function."""
         if self._configure_scheduler_fn:
-            self._configure_scheduler_fn(self)
+            await self._configure_scheduler_fn(self)
 
     async def start(self) -> None:
         """Call user-provided start function."""
         if self._start_core_fn:
-            self._start_core_fn(self)
+            await self._start_core_fn(self)
 
     async def stop(self) -> None:
         """Call user-provided stop function."""
         if self._stop_core_fn:
-            self._stop_core_fn(self)
+            await self._stop_core_fn(self)
 
     @staticmethod
     def _create_services_from_registry_class(registry_cls: type[SR]) -> SR:
