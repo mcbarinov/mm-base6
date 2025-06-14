@@ -36,8 +36,7 @@ publish: build
 
 
 demo:
-    rm -rf demo/src/app
-    cp -r src/app demo/src
+    uv run python scripts/update_demo.py
 
 dev:
     uv run python -m watchfiles "python -m app.main" src

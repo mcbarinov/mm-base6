@@ -2,8 +2,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from fastapi import APIRouter
-from mm_base6 import DC, DV, CoreConfig, DynamicConfigsModel, DynamicValuesModel, ServerConfig
 from mm_std import utc_now
+
+from app.core.types import AppCore
+from mm_base6 import DC, DV, CoreConfig, DynamicConfigsModel, DynamicValuesModel, ServerConfig
 
 core_config = CoreConfig()
 
@@ -16,8 +18,8 @@ class DynamicConfigs(DynamicConfigsModel):
     proxies_url = DC("http://localhost:8000", "proxies url, each proxy on new line")
     telegram_token = DC("", "telegram bot token", hide=True)
     telegram_chat_id = DC(0, "telegram chat id")
-    telegram_polling = DC(False)
-    telegram_admins = DC("", "admin1,admin2,admin3")
+    telegram_bot_admins = DC("", "list of telegram bot admins, for example: 123456789,987654321")
+    telegram_bot_auto_start = DC(False)
     price = DC(Decimal("1.23"), "long long long long long long long long long long long long long long long long ")
     secret_password = DC("abc", hide=True)
     long_cfg_1 = DC("many lines\n" * 5)
@@ -32,11 +34,24 @@ class DynamicValues(DynamicValuesModel):
     last_checked_at = DV(utc_now(), "bla bla about last_checked_at", False)
 
 
+async def configure_scheduler(core: AppCore) -> None:
+    """Configure background scheduler tasks."""
+    core.scheduler.add_task("generate_one", 60, core.services.data.generate_one)
+
+
+async def start_core(core: AppCore) -> None:
+    """Startup logic for the application."""
+
+
+async def stop_core(core: AppCore) -> None:
+    """Cleanup logic for the application."""
+
+
 def get_router() -> APIRouter:
-    from app.server.routers import data_router, misc_router, ui_router
+    from app.server import routers
 
     router = APIRouter()
-    router.include_router(ui_router.router)
-    router.include_router(data_router.router)
-    router.include_router(misc_router.router)
+    router.include_router(routers.ui.router)
+    router.include_router(routers.data.router)
+    router.include_router(routers.misc.router)
     return router
