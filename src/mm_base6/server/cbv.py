@@ -40,7 +40,7 @@ def cbv(router: APIRouter, *urls: str) -> Callable[[type[T]], type[T]]:
     return decorator
 
 
-def _cbv(router: APIRouter, cls: type[T], *urls: str, instance: object = None) -> type[T]:
+def _cbv[T](router: APIRouter, cls: type[T], *urls: str, instance: object = None) -> type[T]:
     """
     Replaces any methods of the provided class `cls` that are endpoints of routes in `router` with updated
     function calls that will properly inject an instance of `cls`.

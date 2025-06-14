@@ -28,6 +28,6 @@ class MiscService(BaseService):
         self.counter.increment()
         return self.counter.get()
 
-    async def update_dynamic_value(self) -> int:
-        self.core.dynamic_values.processed_block = self.core.dynamic_values.processed_block + 1
-        return self.core.dynamic_values.processed_block
+    async def update_state_value(self) -> int:
+        self.core.state.processed_block = self.core.state.processed_block + 1
+        return self.core.state.processed_block

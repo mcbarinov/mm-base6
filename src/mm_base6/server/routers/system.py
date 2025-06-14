@@ -16,8 +16,10 @@ router: APIRouter = APIRouter(prefix="/api/system", tags=["system"])
 class CBV(InternalView):
     @router.get("/stats")
     async def get_stats(self) -> dict[str, object]:
-        psutil_stats = await self.core.base_services.system.get_psutil_stats()
-        stats = await self.core.base_services.system.get_stats()
+        logfile_app_size = await self.core.base_services.logfile.get_logfile_size("app")
+        logfile_access_size = await self.core.base_services.logfile.get_logfile_size("access")
+        psutil_stats = await self.core.base_services.stat.get_psutil_stats()
+        stats = await self.core.base_services.stat.get_stats(logfile_app_size, logfile_access_size)
         return psutil_stats | stats.model_dump()
 
     @router.get("/mongo/profile")
@@ -43,11 +45,11 @@ class CBV(InternalView):
 
     @router.get("/logfile/{file}", response_class=PlainTextResponse)
     async def get_logfile(self, file: str) -> str:
-        return await self.core.base_services.system.read_logfile(file)
+        return await self.core.base_services.logfile.read_logfile(file)
 
     @router.delete("/logfile/{file}")
     async def clean_logfile(self, file: str) -> None:
-        await self.core.base_services.system.clean_logfile(file)
+        await self.core.base_services.logfile.clean_logfile(file)
 
     @router.post("/scheduler/start")
     async def start_scheduler(self) -> None:
@@ -60,10 +62,6 @@ class CBV(InternalView):
     @router.post("/scheduler/reinit")
     async def reinit_scheduler(self) -> None:
         await self.core.reinit_scheduler()
-
-    @router.post("/update-proxies")
-    async def update_proxies(self) -> int | None:
-        return await self.core.base_services.proxy.update_proxies()
 
     @router.post("/telegram/send-test-message")
     async def send_test_telegram_message(self) -> Result[list[int]]:

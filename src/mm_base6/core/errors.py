@@ -3,11 +3,11 @@ class UserError(Exception):
         super().__init__(message)
 
 
-class UnregisteredDynamicConfigError(Exception):
+class UnregisteredSettingError(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
-class UnregisteredDynamicValueError(Exception):
+class UnregisteredStateError(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)

@@ -9,7 +9,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 @unique
-class DynamicConfigType(str, Enum):
+class SettingType(str, Enum):
+    """Database storage types for application settings values.
+
+    Defines how settings values are stored as strings in MongoDB
+    and converted back to Python types when retrieved.
+    """
+
     STRING = "STRING"
     MULTILINE = "MULTILINE"
     DATETIME = "DATETIME"
@@ -19,13 +25,20 @@ class DynamicConfigType(str, Enum):
     DECIMAL = "DECIMAL"
 
 
-class DynamicConfig(MongoModel[str]):
-    type: DynamicConfigType
+class Setting(MongoModel[str]):
+    """MongoDB document for storing application settings with type information.
+
+    Settings are stored as strings in the database with type metadata
+    to enable proper conversion back to Python types. Used by SettingsService
+    to persist SettingsModel fields with validation and type safety.
+    """
+
+    type: SettingType
     value: str
     updated_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "dynamic_config"
+    __collection__: str = "setting"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["type", "value", "updated_at", "created_at"],
@@ -41,12 +54,19 @@ class DynamicConfig(MongoModel[str]):
     }
 
 
-class DynamicValue(MongoModel[str]):
+class State(MongoModel[str]):
+    """MongoDB document for storing application state values.
+
+    State values are serialized (pickled and base64-encoded) for storage
+    and automatically restored when loaded. Used by StateService to persist
+    StateModel fields that are marked as persistent=True.
+    """
+
     value: str
     updated_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "dynamic_value"
+    __collection__: str = "state"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["value", "updated_at", "created_at"],
@@ -61,20 +81,27 @@ class DynamicValue(MongoModel[str]):
     }
 
 
-class SystemLog(MongoModel[ObjectId]):
-    category: str
+class Event(MongoModel[ObjectId]):
+    """MongoDB document for application event logging and monitoring.
+
+    Events are used throughout the framework to track application behavior,
+    errors, and state changes. The data field can contain any JSON-serializable
+    object for flexible event payloads.
+    """
+
+    type: str
     data: object
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "system_log"
-    __indexes__ = "category, created_at"
+    __collection__: str = "event"
+    __indexes__ = "type, created_at"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
-            "required": ["category", "data", "created_at"],
+            "required": ["type", "data", "created_at"],
             "additionalProperties": False,
             "properties": {
                 "_id": {"bsonType": "objectId"},
-                "category": {"bsonType": "string"},
+                "type": {"bsonType": "string"},
                 "data": {},
                 "created_at": {"bsonType": "date"},
             },
@@ -83,15 +110,38 @@ class SystemLog(MongoModel[ObjectId]):
 
 
 class BaseDb(BaseModel):
+    """Base database class providing core MongoDB collections for the framework.
+
+    Automatically discovers and initializes all AsyncMongoCollection fields
+    in derived classes using introspection. Provides the foundational collections
+    needed by the framework's core services: settings, state, and event logging.
+
+    Example:
+        class Db(BaseDb):
+            user: AsyncMongoCollection[ObjectId, User]
+            product: AsyncMongoCollection[str, Product]
+    """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    system_log: AsyncMongoCollection[ObjectId, SystemLog]
-    dynamic_config: AsyncMongoCollection[str, DynamicConfig]
-    dynamic_value: AsyncMongoCollection[str, DynamicValue]
+    event: AsyncMongoCollection[ObjectId, Event]
+    setting: AsyncMongoCollection[str, Setting]
+    state: AsyncMongoCollection[str, State]
 
     database: AsyncDatabaseAny
 
     @classmethod
     async def init_collections(cls, database: AsyncDatabaseAny) -> Self:
+        """Initialize all MongoDB collections defined in the class annotations.
+
+        Automatically discovers AsyncMongoCollection fields and initializes them
+        with the corresponding MongoModel classes, creating indexes and validators.
+
+        Args:
+            database: MongoDB database instance to create collections in
+
+        Returns:
+            Initialized database instance with all collections ready for use
+        """
         data: dict[str, AsyncMongoCollection[Any, Any]] = {}
         for key, value in cls._mongo_collections().items():
             model = get_args(value)[1]
@@ -100,6 +150,15 @@ class BaseDb(BaseModel):
 
     @classmethod
     def _mongo_collections(cls) -> dict[str, AsyncMongoCollection[Any, Any]]:
+        """Discover AsyncMongoCollection fields in the class hierarchy.
+
+        Uses introspection to find all fields typed as AsyncMongoCollection
+        across the entire class hierarchy, enabling automatic collection
+        initialization without manual registration.
+
+        Returns:
+            Dictionary mapping field names to their AsyncMongoCollection types
+        """
         result: dict[str, AsyncMongoCollection[Any, Any]] = {}
 
         for base in reversed(cls.__mro__):

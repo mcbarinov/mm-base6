@@ -12,13 +12,13 @@ from starlette.responses import HTMLResponse
 
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
-from mm_base6.core.dynamic_config import DynamicConfigsModel
-from mm_base6.core.dynamic_value import DynamicValuesModel
+from mm_base6.core.services.settings import SettingsModel
+from mm_base6.core.services.state import StateModel
 from mm_base6.server import utils
 from mm_base6.server.config import ServerConfig
 
 
-def system_log_data_truncate(data: object) -> str:
+def event_data_truncate(data: object) -> str:
     if not data:
         return ""
     res = json_dumps(data)
@@ -40,21 +40,21 @@ async def empty_markup(_: object) -> Markup:
     return Markup("")
 
 
-def init_env[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
-    core: CoreProtocol[DC, DV, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig
+def init_env[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
+    core: CoreProtocol[SC, ST, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig
 ) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 
     header_info = jinja_config.header_info if jinja_config.header_info else empty_markup
     footer_info = jinja_config.footer_info if jinja_config.footer_info else empty_markup
     custom_filters: dict[str, Callable[..., Any]] = {
-        "system_log_data_truncate": system_log_data_truncate,
+        "event_data_truncate": event_data_truncate,
     }
     custom_globals: dict[str, Any] = {
         "core_config": core.core_config,
         "server_config": server_config,
-        "dynamic_configs": core.dynamic_configs,
-        "dynamic_values": core.dynamic_values,
+        "settings": core.settings,
+        "state": core.state,
         "confirm": Markup(""" onclick="return confirm('sure?')" """),
         "header_info": partial(header_info, core),
         "footer_info": partial(footer_info, core),

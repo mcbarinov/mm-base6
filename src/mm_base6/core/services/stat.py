@@ -1,23 +1,21 @@
 from __future__ import annotations
 
+__all__ = ["StatService", "Stats"]
+
 import asyncio
-import logging
 import platform
 import threading
 import time
 from datetime import datetime, timedelta
 from typing import Literal
 
-import anyio
 import psutil
 import pydash
-from bson import ObjectId
 from mm_concurrency.async_scheduler import AsyncScheduler
 from mm_std import utc_now
 from pydantic import BaseModel
 
-from mm_base6.core.config import CoreConfig
-from mm_base6.core.db import BaseDb, SystemLog
+from mm_base6.core.db import BaseDb
 
 
 class Stats(BaseModel):
@@ -51,36 +49,36 @@ class Stats(BaseModel):
             return time.time() - self.start_time
 
     db: dict[str, int]  # collection name -> count
+    events: int  # count
     logfile_app: int  # size in bytes
     logfile_access: int  # size in bytes
-    system_logs: int  # count
     threads: list[ThreadInfo]
     scheduler: Scheduler
     async_tasks: list[AsyncTask]
 
 
-logger = logging.getLogger(__name__)
+class StatService:
+    """Service for collecting comprehensive application and system statistics.
 
+    Gathers runtime information including database collection counts, thread states,
+    async task monitoring, scheduler status, and system resource usage via psutil.
+    Used for debugging, performance monitoring, and administrative dashboards.
+    """
 
-# noinspection PyMethodMayBeStatic
-class SystemService:
-    def __init__(self, core_config: CoreConfig, db: BaseDb, scheduler: AsyncScheduler) -> None:
+    def __init__(self, db: BaseDb, scheduler: AsyncScheduler) -> None:
         self.db = db
-        self.logfile_app = anyio.Path(core_config.data_dir / "app.log")
-        self.logfile_access = anyio.Path(core_config.data_dir / "access.log")
         self.scheduler = scheduler
 
-    async def system_log(self, category: str, data: object = None) -> None:
-        logger.debug("system log: %s %s", category, data)
-        await self.db.system_log.insert_one(SystemLog(id=ObjectId(), category=category, data=data))
+    async def get_stats(self, logfile_app_size: int, logfile_access_size: int) -> Stats:
+        """Collect comprehensive application runtime statistics.
 
-    async def get_system_log_category_stats(self) -> dict[str, int]:
-        result = {}
-        for category in await self.db.system_log.collection.distinct("category"):
-            result[category] = await self.db.system_log.count({"category": category})
-        return result
+        Args:
+            logfile_app_size: Size of application log file in bytes
+            logfile_access_size: Size of access log file in bytes
 
-    async def get_stats(self) -> Stats:
+        Returns:
+            Complete statistics including DB, threads, scheduler, and async tasks
+        """
         # threads
         threads = []
         for t in threading.enumerate():
@@ -121,15 +119,29 @@ class SystemService:
 
         return Stats(
             db=db_stats,
-            logfile_app=(await self.logfile_app.stat()).st_size,
-            logfile_access=(await self.logfile_access.stat()).st_size,
-            system_logs=await self.db.system_log.count({}),
+            events=await self.db.event.count({}),
+            logfile_app=logfile_app_size,
+            logfile_access=logfile_access_size,
             threads=threads,
             scheduler=scheduler,
             async_tasks=async_tasks,
         )
 
     async def get_psutil_stats(self) -> dict[str, object]:
+        """Collect detailed system resource and platform statistics.
+
+        Uses psutil to gather CPU usage, memory consumption, disk usage,
+        system uptime, and platform information. CPU measurement includes
+        a 10-second sampling interval for accurate utilization data.
+
+        Returns:
+            Dictionary with formatted system statistics including:
+            - CPU: count, usage percentage, frequency
+            - Memory: total, used, available with percentages
+            - Disk: total, used, free space with percentages
+            - System: uptime, platform details, hostname
+        """
+
         def format_bytes(num_bytes: int) -> str:
             """Convert bytes to a human-readable string."""
             for unit in ["B", "KB", "MB", "GB", "TB"]:
@@ -198,19 +210,3 @@ class SystemService:
             }
 
         return await asyncio.to_thread(psutils_stats)
-
-    async def read_logfile(self, file: str) -> str:
-        if file == "app":
-            return await self.logfile_app.read_text(encoding="utf-8")
-        if file == "access":
-            return await self.logfile_access.read_text(encoding="utf-8")
-        raise ValueError(f"Unknown logfile: {file}")
-
-    async def clean_logfile(self, file: str) -> None:
-        if file == "app":
-            await self.logfile_app.write_text("", encoding="utf-8")
-            return
-        if file == "access":
-            await self.logfile_access.write_text("", encoding="utf-8")
-            return
-        raise ValueError(f"Unknown logfile: {file}")

@@ -1,6 +1,6 @@
 import asyncio
 
-from app import settings, telegram_handlers
+from app import config, telegram_handlers
 from app.core.db import Db
 from app.core.services import ServiceRegistry
 from app.server import jinja
@@ -9,21 +9,18 @@ from mm_base6 import Core, run
 
 async def main() -> None:
     core = await Core.init(
-        core_config=settings.core_config,
-        dynamic_configs_cls=settings.DynamicConfigs,
-        dynamic_values_cls=settings.DynamicValues,
+        core_config=config.core_config,
+        settings_cls=config.Settings,
+        state_cls=config.State,
         db_cls=Db,
         service_registry_cls=ServiceRegistry,
-        configure_scheduler_fn=settings.configure_scheduler,
-        start_core_fn=settings.start_core,
-        stop_core_fn=settings.stop_core,
+        lifespan_cls=config.AppCoreLifecycle,
     )
 
     await run(
         core=core,
-        server_config=settings.server_config,
+        server_config=config.server_config,
         telegram_handlers=telegram_handlers.handlers,
-        router=settings.get_router(),
         jinja_config=jinja.jinja_config,
         host="0.0.0.0",  # noqa: S104 # nosec
         port=3000,

@@ -1,8 +1,8 @@
 from markupsafe import Markup
-from mm_base6 import JinjaConfig
 
-from app.core.core import Core
 from app.core.db import DataStatus
+from app.core.types import AppCore
+from mm_base6 import JinjaConfig
 
 
 def data_status(status: DataStatus) -> Markup:
@@ -14,13 +14,13 @@ def data_status(status: DataStatus) -> Markup:
     return Markup(f"<span style='color: {color};'>{status.value}</span>")  # noqa: S704 # nosec
 
 
-async def header_info(core: Core) -> Markup:
+async def header_info(core: AppCore) -> Markup:
     count = await core.db.data.count({})
     info = f"<span style='color: red'>data: {count}</span>"
     return Markup(info)  # noqa: S704 # nosec
 
 
-async def footer_info(core: Core) -> Markup:
+async def footer_info(core: AppCore) -> Markup:
     count = await core.db.data.count({})
     info = f"data: {count}"
     return Markup(info)  # noqa: S704 # nosec

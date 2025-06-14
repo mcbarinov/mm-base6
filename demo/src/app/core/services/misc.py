@@ -1,6 +1,7 @@
 import threading
 
-from app.core.types_ import AppService, AppServiceParams
+from app.core.types import AppCore
+from mm_base6 import BaseService
 
 
 class ThreadSafeCounter:
@@ -17,15 +18,16 @@ class ThreadSafeCounter:
             return self.value
 
 
-class MiscService(AppService):
-    def __init__(self, base_params: AppServiceParams) -> None:
-        super().__init__(base_params)
+class MiscService(BaseService):
+    core: AppCore
+
+    def __init__(self) -> None:
         self.counter = ThreadSafeCounter()
 
     def increment_counter(self) -> int:
         self.counter.increment()
         return self.counter.get()
 
-    async def update_dynamic_value(self) -> int:
-        self.dynamic_values.processed_block = self.dynamic_values.processed_block + 1
-        return self.dynamic_values.processed_block
+    async def update_state_value(self) -> int:
+        self.core.state.processed_block = self.core.state.processed_block + 1
+        return self.core.state.processed_block

@@ -4,7 +4,6 @@ from collections.abc import Coroutine
 from contextvars import Context
 from typing import Any
 
-from fastapi import APIRouter
 from mm_telegram import TelegramBot, TelegramHandler
 
 from mm_base6.core.core import CoreProtocol
@@ -20,7 +19,6 @@ async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
     telegram_handlers: list[TelegramHandler] | None = None,
-    router: APIRouter,
     host: str,
     port: int,
     uvicorn_log_level: str,
@@ -38,7 +36,7 @@ async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
         if telegram_bot_settings and telegram_bot_settings.auto_start:
             await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 
-    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config, router)
+    fastapi_app = init_server(core, telegram_bot, server_config, jinja_config)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 
 

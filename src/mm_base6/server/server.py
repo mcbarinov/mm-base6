@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI
+from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from jinja2 import Environment
@@ -19,9 +19,9 @@ from starlette.types import Lifespan
 from mm_base6 import CoreConfig, ServerConfig
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
-from mm_base6.core.dynamic_config import DynamicConfigsModel
-from mm_base6.core.dynamic_value import DynamicValuesModel
 from mm_base6.core.errors import UserError
+from mm_base6.core.services.settings import SettingsModel
+from mm_base6.core.services.state import StateModel
 from mm_base6.server import utils
 from mm_base6.server.jinja import JinjaConfig, init_env
 from mm_base6.server.middleware.auth import AccessTokenMiddleware
@@ -31,12 +31,11 @@ from mm_base6.server.routers import base_router
 logger = logging.getLogger(__name__)
 
 
-def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
-    core: CoreProtocol[DC, DV, DB, SR],
+def init_server[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
+    core: CoreProtocol[SC, ST, DB, SR],
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_config: JinjaConfig,
-    router: APIRouter,
 ) -> FastAPI:
     jinja_env = init_env(core, server_config, jinja_config)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=configure_lifespan(core))
@@ -46,7 +45,7 @@ def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]
     configure_exception_handler(app, core.core_config)
 
     app.include_router(base_router)
-    app.include_router(router)
+    app.include_router(server_config.get_router())
     app.mount("/assets", StaticFiles(directory=Path(__file__).parent.absolute() / "assets"), name="assets")
     app.add_middleware(AccessTokenMiddleware, access_token=server_config.access_token)
     app.add_middleware(SessionMiddleware, secret_key=server_config.access_token)
@@ -55,9 +54,9 @@ def init_server[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR]
 
 
 # noinspection PyUnresolvedReferences
-def configure_state[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
+def configure_state[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
     app: FastAPI,
-    core: CoreProtocol[DC, DV, DB, SR],
+    core: CoreProtocol[SC, ST, DB, SR],
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
     jinja_env: Environment,
@@ -108,8 +107,8 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
         return PlainTextResponse(message, status_code=500)
 
 
-def configure_lifespan[DC: DynamicConfigsModel, DV: DynamicValuesModel, DB: BaseDb, SR](
-    core: CoreProtocol[DC, DV, DB, SR],
+def configure_lifespan[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
+    core: CoreProtocol[SC, ST, DB, SR],
 ) -> Lifespan[FastAPI]:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: UP043

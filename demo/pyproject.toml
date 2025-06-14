@@ -2,10 +2,8 @@
 name = "app"
 version = "0.0.1"
 description = ""
-requires-python = ">=3.12"
-dependencies = [
-    "mm-base6>=0.1.2",
-]
+requires-python = ">=3.13"
+dependencies = ["mm-base6==0.5.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -13,15 +11,14 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 dev-dependencies = [
-    "pytest~=8.3.5",
-    "pytest-xdist~=3.6.1",
+    "pytest~=8.4.1",
+    "pytest-xdist~=3.7.0",
     "pytest-httpserver~=1.1.3",
-    "ruff~=0.11.8",
+    "ruff~=0.12.0",
     "pip-audit~=2.9.0",
-    "bandit~=1.8.3",
-    "mypy~=1.15.0",
-    "watchfiles>=1.0.5",
-    "types-psutil>=7.0.0.20250401",
+    "bandit~=1.8.5",
+    "mypy~=1.16.1",
+    "watchfiles~=1.1.0",
 ]
 
 [tool.mypy]
@@ -40,29 +37,28 @@ exclude = ["demo/", "cookiecutter/"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "TC", # flake8-type-checking, TYPE_CHECKING is dangerous, for example it doesn't work with pydantic
-    "A005", # flake8-builtins: stdlib-module-shadowing
-    "ERA001", # eradicate: commented-out-code
-    "PT", # flake8-pytest-style
-    "D", # pydocstyle
-    "FIX", # flake8-fixme
+    "TC",      # flake8-type-checking, TYPE_CHECKING is dangerous, for example it doesn't work with pydantic
+    "A005",    # flake8-builtins: stdlib-module-shadowing
+    "ERA001",  # eradicate: commented-out-code
+    "PT",      # flake8-pytest-style
+    "D",       # pydocstyle
+    "FIX",     # flake8-fixme
     "PLR0911", # pylint: too-many-return-statements
     "PLR0912", # pylint: too-many-branches
     "PLR0913", # pylint: too-many-arguments
     "PLR2004", # pylint: magic-value-comparison
     "PLC0414", # pylint: useless-import-alias
-    "FBT", # flake8-boolean-trap
-    "EM", # flake8-errmsg
-    "TRY003", # tryceratops: raise-vanilla-args
-    "C901", # mccabe: complex-structure,
-    "BLE001", # flake8-blind-except
-    "S311", # bandit: suspicious-non-cryptographic-random-usage
-    "TD002", # flake8-todos: missing-todo-author
-    "TD003", # flake8-todos: missing-todo-link
-    "RET503", # flake8-return: implicit-return
-    "RUF012", # ruff: mutable-class-default
-    "COM812", # it's used in ruff formatter
-    # "T201", # DELETE ME!
+    "FBT",     # flake8-boolean-trap
+    "EM",      # flake8-errmsg
+    "TRY003",  # tryceratops: raise-vanilla-args
+    "C901",    # mccabe: complex-structure,
+    "BLE001",  # flake8-blind-except
+    "S311",    # bandit: suspicious-non-cryptographic-random-usage
+    "TD002",   # flake8-todos: missing-todo-author
+    "TD003",   # flake8-todos: missing-todo-link
+    "RET503",  # flake8-return: implicit-return
+    "RUF012",  # ruff: mutable-class-default
+    "COM812",  # it's used in ruff formatter
 ]
 [tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["id"]

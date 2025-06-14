@@ -10,27 +10,20 @@
           <td><a href="/system/openapi">view</a></td>
         </tr>
         <tr>
-          <td>dynamic configs</td>
+          <td>settings</td>
           <td></td>
-          <td><a href="/system/dynamic-configs">view</a></td>
+          <td><a href="/system/settings">view</a></td>
         </tr>
         <tr>
-          <td>dynamic values</td>
+          <td>state</td>
           <td></td>
-          <td><a href="/system/dynamic-values">view</a></td>
+          <td><a href="/system/state">view</a></td>
         </tr>
         <tr>
-          <td>system logs</td>
-          <td>{{ stats.system_logs }}</td>
-          <td><a href="/system/system-logs">view</a></td>
+          <td>events</td>
+          <td>{{ stats.events }}</td>
+          <td><a href="/system/events">view</a></td>
         </tr>
-        {% if has_proxies_settings %}
-          <tr>
-            <td>proxies</td>
-            <td>{{ dynamic_values.proxies | length }}</td>
-            <td><a href="/api-post/system/update-proxies">update</a></td>
-          </tr>
-        {% endif %}
         {% if telegram_message_settings %}
           <tr>
             <td>telegram message</td>

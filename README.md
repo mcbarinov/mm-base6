@@ -1,23 +1,38 @@
 # mm-base6
 
-A library for building async web applications in Python with type safety and developer experience.
+Web framework with MongoDB integration and unified `self.core` access.
 
-## Overview
+## Core Features
 
-**mm-base6** provides a batteries-included foundation for FastAPI applications with a focus on:
+The main value of mm-base6 is the `self.core` object available in your services and routes, providing:
 
-- **Type Safety** - Full generic typing with mypy strict mode support
-- **Dynamic Configuration** - Runtime configuration management with web UI
-- **MongoDB Integration** - Type-safe collections with automatic schema validation
-- **Built-in Admin UI** - Ready-to-use web interface for system management
-- **Telegram Bot Support** - Integrated bot framework
-- **Background Tasks** - Async scheduler with monitoring
-- **System Monitoring** - Resource usage, logs, and performance tracking
-- **Authentication** - Token-based auth with middleware
-- **Developer Experience** - Automatic dependency injection and code completion
+- **`core.settings`** - Type-safe persistent configuration
+- **`core.state`** - Application state with MongoDB persistence  
+- **`core.event()`** - Event logging and monitoring
+- **`core.base_services.telegram`** - Message sending and bot management
+- **`core.services`** - Your custom application services
+
+```python
+class MyService(BaseService):
+    async def do_something(self):
+        # Access settings
+        token = self.core.settings.api_token
+        
+        # Update state
+        self.core.state.last_run = utc_now()
+        
+        # Log events
+        await self.core.event("task_completed", {"status": "success"})
+        
+        # Send notifications
+        await self.core.base_services.telegram.send_message("Task done!")
+        
+        # Use other services
+        result = await self.core.services.data.process()
+```
 
 ## Naming Conventions
 
 - **MongoDB collections**: snake_case, singular (e.g., `user`, `data_item`)
-- **Service classes**: PascalCase ending with "Service" (e.g., `DataService`, `UserService`)
+- **Service classes**: PascalCase ending with "Service" (e.g., `DataService`, `UserService`)  
 - **Service registry attributes**: snake_case without "service" suffix (e.g., `data`, `user`)

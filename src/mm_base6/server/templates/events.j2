@@ -1,0 +1,52 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+  <h3>events</h3>
+
+
+  <div class="grid">
+    <form method="GET">
+      <fieldset role="group">
+        <select name="type">
+          <option value="">type...</option>
+          {% for event_type in type_stats %}
+            <option value="{{ event_type }}" {{ "selected" if event_type==form.type }}>{{ event_type }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" placeholder="limit" name="limit" value="{{ form.limit }}">
+        <input type="submit" value="filter" class="outline">
+      </fieldset>
+    </form>
+    <div>
+      <details>
+        <summary role="button" class="outline">delete</summary>
+        <ul>
+          {% for event_type, count in type_stats.items() %}
+            <li>{{ event_type }} / {{ count }} / <a href="/api-delete/system/events/type/{{ event_type }}" {{ confirm }}>delete</a></li>
+          {% endfor %}
+
+
+        </ul>
+        <p>all events / {{ all_count }} / <a href="/api-delete/system/events" {{ confirm }}>delete</a></p>
+      </details>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <th>created_at</th>
+      <th>type</th>
+      <th>data</th>
+      <th>delete</th>
+      <th>view</th>
+    </tr>
+    {% for e in events %}
+      <tr>
+        <td>{{ e.created_at | dt }}</td>
+        <td>{{ e.type }}</td>
+        <td>{{ e.data | event_data_truncate }}</td>
+        <td><a href="/api-delete/system/events/{{ e.id }}">delete</a></td>
+        <td><a href="/api/system/events/{{ e.id }}">view</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
