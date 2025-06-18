@@ -1,7 +1,7 @@
 import threading
 
 from app.core.types import AppCore
-from mm_base6 import BaseService
+from mm_base6 import Service
 
 
 class ThreadSafeCounter:
@@ -18,7 +18,7 @@ class ThreadSafeCounter:
             return self.value
 
 
-class MiscService(BaseService):
+class MiscService(Service):
     core: AppCore
 
     def __init__(self) -> None:

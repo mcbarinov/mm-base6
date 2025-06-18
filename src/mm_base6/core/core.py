@@ -174,7 +174,7 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         return inst
 
     async def _inject_core_into_services(self) -> None:
-        """Inject core instance into all user services extending BaseService.
+        """Inject core instance into all user services extending Service.
 
         Enables services to access core functionality like event logging,
         settings, state, and other services through dependency injection.
@@ -182,7 +182,7 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         for attr_name in dir(self.services):
             if not attr_name.startswith("_"):
                 service = getattr(self.services, attr_name)
-                if isinstance(service, BaseService):
+                if isinstance(service, Service):
                     service.core = self
 
     @synchronized
@@ -301,16 +301,10 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         return registry
 
 
-class BaseService:
+class Service:
     """Base class for user services. Core will be automatically injected."""
 
     core: Any  # Will be properly typed by user with type alias
-
-    async def event(self, event_type: str, data: object = None) -> None:
-        await self.core.base_services.event.event(event_type, data)
-
-    async def send_telegram_message(self, message: str) -> object:
-        return await self.core.base_services.telegram.send_message(message)
 
 
 class CoreLifecycle[T: "CoreProtocol[Any, Any, Any, Any]"]:

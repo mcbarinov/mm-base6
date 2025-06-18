@@ -7,12 +7,12 @@ from mm_mongo import MongoInsertManyResult, MongoInsertOneResult
 
 from app.core.db import Data, DataStatus
 from app.core.types import AppCore
-from mm_base6 import BaseService
+from mm_base6 import Service
 
 logger = logging.getLogger(__name__)
 
 
-class DataService(BaseService):
+class DataService(Service):
     core: AppCore
 
     async def generate_one(self) -> MongoInsertOneResult:
@@ -25,9 +25,11 @@ class DataService(BaseService):
 
     async def generate_many(self) -> MongoInsertManyResult:
         res = await http_request("https://httpbin.org/get")
-        await self.event("generate_many", {"res": res.parse_json_body(none_on_error=True), "large-data": "abc" * 100})
-        await self.event("ddd", self.core.settings.telegram_token)
-        await self.send_telegram_message("generate_many")
+        await self.core.base_services.event.event(
+            "generate_many", {"res": res.parse_json_body(none_on_error=True), "large-data": "abc" * 100}
+        )
+        await self.core.base_services.event.event("ddd", self.core.settings.telegram_token)
+        await self.core.base_services.telegram.send_message("generate_many")
         new_data_list = [
             Data(id=ObjectId(), status=random.choice(list(DataStatus)), value=random.randint(0, 1_000_000)) for _ in range(10)
         ]

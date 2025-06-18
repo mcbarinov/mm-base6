@@ -1,8 +1,8 @@
 from .core.config import CoreConfig as CoreConfig
-from .core.core import BaseService as BaseService
 from .core.core import Core as Core
 from .core.core import CoreLifecycle as CoreLifecycle
 from .core.core import CoreProtocol as CoreProtocol
+from .core.core import Service as Service
 from .core.db import BaseDb as BaseDb
 from .core.errors import UserError as UserError
 from .core.services.settings import SettingsModel as SettingsModel
@@ -21,13 +21,13 @@ from .run import run as run
 
 __all__ = [
     "BaseDb",
-    "BaseService",
     "Core",
     "CoreConfig",
     "CoreLifecycle",
     "CoreProtocol",
     "JinjaConfig",
     "ServerConfig",
+    "Service",
     "SettingsModel",
     "StateModel",
     "UserError",

@@ -94,7 +94,7 @@ class Event(MongoModel[ObjectId]):
     created_at: datetime = Field(default_factory=utc_now)
 
     __collection__: str = "event"
-    __indexes__ = "type, created_at"
+    __indexes__ = ["type", "created_at"]
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["type", "data", "created_at"],

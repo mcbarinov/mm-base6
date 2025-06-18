@@ -13,7 +13,7 @@ The main value of mm-base6 is the `self.core` object available in your services 
 - **`core.services`** - Your custom application services
 
 ```python
-class MyService(BaseService):
+class MyService(Service):
     async def do_something(self):
         # Access settings
         token = self.core.settings.api_token
@@ -22,7 +22,7 @@ class MyService(BaseService):
         self.core.state.last_run = utc_now()
         
         # Log events
-        await self.core.event("task_completed", {"status": "success"})
+        await self.core.base_services.event.event("task_completed", {"status": "success"})
         
         # Send notifications
         await self.core.base_services.telegram.send_message("Task done!")
