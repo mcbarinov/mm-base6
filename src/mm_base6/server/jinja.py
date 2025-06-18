@@ -1,5 +1,4 @@
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from collections.abc import Callable
 from functools import partial
 from typing import Any
 
@@ -27,26 +26,30 @@ def event_data_truncate(data: object) -> str:
     return res
 
 
-@dataclass
-class JinjaConfig:
-    header_info: Callable[..., Awaitable[Markup]] | None = None
+class JinjaConfig[T: "CoreProtocol[Any, Any, Any, Any]"]:
+    """Base class for Jinja configuration."""
+
+    filters: dict[str, Callable[..., Any]] = {}
+    globals: dict[str, Any] = {}
     header_info_new_line: bool = False
-    footer_info: Callable[..., Awaitable[Markup]] | None = None
-    filters: dict[str, Callable[..., Any]] | None = None
-    globals: dict[str, Any] | None = None
 
+    def __init__(self, core: T) -> None:
+        self.core = core
 
-async def empty_markup(_: object) -> Markup:
-    return Markup("")
+    async def header(self) -> Markup:
+        """Override to provide custom header info."""
+        return Markup("")
+
+    async def footer(self) -> Markup:
+        """Override to provide custom footer info."""
+        return Markup("")
 
 
 def init_env[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
-    core: CoreProtocol[SC, ST, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig
+    core: CoreProtocol[SC, ST, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig[Any]
 ) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 
-    header_info = jinja_config.header_info if jinja_config.header_info else empty_markup
-    footer_info = jinja_config.footer_info if jinja_config.footer_info else empty_markup
     custom_filters: dict[str, Callable[..., Any]] = {
         "event_data_truncate": event_data_truncate,
     }
@@ -56,8 +59,8 @@ def init_env[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
         "settings": core.settings,
         "state": core.state,
         "confirm": Markup(""" onclick="return confirm('sure?')" """),
-        "header_info": partial(header_info, core),
-        "footer_info": partial(footer_info, core),
+        "header_info": partial(jinja_config.header),
+        "footer_info": partial(jinja_config.footer),
         "header_info_new_line": jinja_config.header_info_new_line,
         "app_version": utils.get_package_version("app"),
         "mm_base6_version": utils.get_package_version("mm_base6"),

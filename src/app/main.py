@@ -21,7 +21,7 @@ async def main() -> None:
         core=core,
         server_config=config.server_config,
         telegram_handlers=telegram_handlers.handlers,
-        jinja_config=jinja.jinja_config,
+        jinja_config_cls=jinja.AppJinjaConfig,
         host="0.0.0.0",  # noqa: S104 # nosec
         port=3000,
         uvicorn_log_level="warning",

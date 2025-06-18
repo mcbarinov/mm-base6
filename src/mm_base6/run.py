@@ -17,7 +17,7 @@ async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
     *,
     core: CoreType,
     server_config: ServerConfig,
-    jinja_config: JinjaConfig,
+    jinja_config_cls: type[JinjaConfig[CoreType]],
     telegram_handlers: list[TelegramHandler] | None = None,
     host: str,
     port: int,
@@ -36,6 +36,7 @@ async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
         if telegram_bot_settings and telegram_bot_settings.auto_start:
             await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 
+    jinja_config = jinja_config_cls(core)
     fastapi_app = init_server(core, telegram_bot, server_config, jinja_config)
     await serve_uvicorn(fastapi_app, host=host, port=port, log_level=uvicorn_log_level)  # nosec
 

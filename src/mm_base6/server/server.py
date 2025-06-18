@@ -4,6 +4,7 @@ import traceback
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -31,11 +32,11 @@ from mm_base6.server.routers import base_router
 logger = logging.getLogger(__name__)
 
 
-def init_server[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
-    core: CoreProtocol[SC, ST, DB, SR],
+def init_server[CoreType: CoreProtocol[Any, Any, Any, Any]](
+    core: CoreType,
     telegram_bot: TelegramBot | None,
     server_config: ServerConfig,
-    jinja_config: JinjaConfig,
+    jinja_config: JinjaConfig[CoreType],
 ) -> FastAPI:
     jinja_env = init_env(core, server_config, jinja_config)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=configure_lifespan(core))
