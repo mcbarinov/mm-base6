@@ -1,6 +1,6 @@
 import asyncio
 
-from app import config, telegram_handlers
+from app import config, telegram_bot
 from app.core.db import Db
 from app.core.services import ServiceRegistry
 from app.server import jinja
@@ -20,7 +20,7 @@ async def main() -> None:
     await run(
         core=core,
         server_config=config.server_config,
-        telegram_handlers=telegram_handlers.handlers,
+        telegram_handlers=telegram_bot.handlers,
         jinja_config_cls=jinja.AppJinjaConfig,
         host="0.0.0.0",  # noqa: S104 # nosec
         port=3000,
