@@ -1,181 +1,189 @@
 {% extends "inc/base.j2" %}
 {% block content %}
-  <h3>system</h3>
-  <div class="grid">
-    <section>
-      <table>
-        <tr>
-          <td>openapi</td>
-          <td></td>
-          <td><a href="/system/openapi">view</a></td>
-        </tr>
-        <tr>
-          <td>settings</td>
-          <td></td>
-          <td><a href="/system/settings">view</a></td>
-        </tr>
-        <tr>
-          <td>state</td>
-          <td></td>
-          <td><a href="/system/state">view</a></td>
-        </tr>
-        <tr>
-          <td>events</td>
-          <td>{{ stats.events }}</td>
-          <td><a href="/system/events">view</a></td>
-        </tr>
-        {% if telegram_message_settings %}
-          <tr>
-            <td>telegram message</td>
-            <td></td>
-            <td>
-              <a href="/api-post/system/telegram/send-test-message">test message</a>
-            </td>
-          </tr>
-        {% endif %}
-        {% if telegram_bot_settings %}
-          <tr>
-            <td>telegram bot</td>
-            <td>{{ "started" if telegram_bot.app is not none else "stopped" }}</td>
-            <td>
-              <a href="/api-post/system/telegram/start-bot">start</a> |
-              <a href="/api-post/system/telegram/shutdown-bot">shutdown</a>
-            </td>
-          </tr>
-        {% endif %}
-        <tr>
-          <td>scheduler</td>
-          <td>
-            {{ "running" if stats.scheduler.running else "not running" }} /
-            {{ stats.scheduler.tasks | length }}
-          </td>
-          <td>
-            <nav>
-              <ul>
-                <li><a href="/api-post/system/scheduler/start">start</a></li>
-                <li><a href="/api-post/system/scheduler/stop">stop</a></li>
-                <li><a href="/api-post/system/scheduler/reinit">re-init</a></li>
-              </ul>
-            </nav>
-          </td>
-        </tr>
-        <tr>
-          <td>system stats</td>
-          <td></td>
-          <td><a href="/api/system/stats">view</a></td>
-        </tr>
-        <tr>
-          <td>logfile, app</td>
-          <td>{{ stats.logfile_app | filesizeformat }}</td>
-          <td>
-            <nav>
-              <ul>
-                <li><a href="/api/system/logfile/app">view</a></li>
-                <li><a href="/api-delete/system/logfile/app" {{ confirm }}>clean</a></li>
-              </ul>
-            </nav>
-          </td>
-        </tr>
-        <tr>
-          <td>logfile, access</td>
-          <td></td>
-          <td>
-            <nav>
-              <ul>
-                <li><a href="/api/system/logfile/access">view</a></li>
-                <li><a href="/api-delete/system/logfile/access" {{ confirm }}>clean</a></li>
-              </ul>
-            </nav>
-          </td>
-        </tr>
-      </table>
-    </section>
-    <section>
-      <h5>db / {{ stats.db | length }}</h5>
-      <table>
-        {% for k,v in stats.db.items() %}
-          <tr>
-            <td>{{ k }}</td>
-            <td>{{ v }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-      <nav>
-        <ul>
-          <li><a href="/api/system/mongo/profile">profiling status</a></li>
-          <li><a href="/api/system/mongo/slow">slow queries</a></li>
-        </ul>
-      </nav>
+<div class="page-header">
+  <h2>system</h2>
+  <sl-divider vertical></sl-divider>
+  <sl-button href="/auth/logout" size="small">
+    <sl-icon slot="suffix" name="box-arrow-right"></sl-icon>
+    logout
+  </sl-button>
+</div>
 
 
-    </section>
-  </div>
-
-  <details>
-    <summary><h5>scheduler / {{ stats.scheduler.tasks | length }}</h5></summary>
+<div style="display: flex; gap: 5rem; flex-wrap: wrap;">
+  <sl-card>
     <table>
       <tr>
-        <th>task_id</th>
-        <th>interval</th>
-        <th>last_run</th>
-        <th>run_count</th>
-        <th>error_count</th>
-        <th>running</th>
+        <td>openapi</td>
+        <td></td>
+        <td><sl-button href="/system/openapi">view</sl-button></td>
       </tr>
-      {% for t in stats.scheduler.tasks %}
-        <tr>
-          <td>{{ t.task_id }}</td>
-          <td>{{ t.interval }}</td>
-          <td>{{ t.last_run | dt }}</td>
-          <td>{{ t.run_count }}</td>
-          <td>{{ t.error_count }}</td>
-          <td>{{ t.running | yes_no }}</td>
-        </tr>
+      <tr>
+        <td>settings</td>
+        <td></td>
+        <td><sl-button href="/system/settings">view</sl-button></td>
+      </tr>
+      <tr>
+        <td>state</td>
+        <td></td>
+        <td><sl-button href="/system/state">view</sl-button></td>
+      </tr>
+      <tr>
+        <td>events</td>
+        <td>{{ stats.events }}</td>
+        <td><sl-button href="/system/events">view</sl-button></td>
+      </tr>
+      {% if telegram_message_settings %}
+      <tr>
+        <td>telegram message</td>
+        <td></td>
+        <td>
+          <sl-button href="/api-post/system/telegram/send-test-message">test message</sl-button>
+        </td>
+      </tr>
+      {% endif %}
+      {% if telegram_bot_settings %}
+      <tr>
+        <td>telegram bot</td>
+        <td>{{ "started" if telegram_bot.app is not none else "stopped" }}</td>
+        <td>
+          <sl-button-group>
+            <sl-button href="/api-post/system/telegram/start-bot">start</sl-button>
+            <sl-button href="/api-post/system/telegram/shutdown-bot">shutdown</sl-button>
+          </sl-button-group>
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td>scheduler</td>
+        <td>
+          {{ "running" if stats.scheduler.running else "not running" }} /
+          {{ stats.scheduler.tasks | length }}
+        </td>
+        <td>
+          <sl-button-group>
+            <sl-button href="/api-post/system/scheduler/start">start</sl-button>
+            <sl-button href="/api-post/system/scheduler/stop">stop</sl-button>
+            <sl-button href="/api-post/system/scheduler/reinit">re-init</sl-button>
+          </sl-button-group>
+        </td>
+      </tr>
+      <tr>
+        <td>system stats</td>
+        <td></td>
+        <td><sl-button href="/api/system/stats">view</sl-button></td>
+      </tr>
+      <tr>
+        <td>logfile, app</td>
+        <td>{{ stats.logfile_app | filesizeformat }}</td>
+        <td>
+          <sl-button-group>
+            <sl-button href="/api/system/logfile/app">view</sl-button>
+            <sl-button href="/api-delete/system/logfile/app" {{ confirm }}>clean</sl-button>
+          </sl-button-group>
+        </td>
+      </tr>
+      <tr>
+        <td>logfile, access</td>
+        <td></td>
+        <td>
+          <sl-button-group>
+            <sl-button href="/api/system/logfile/access">view</sl-button>
+            <sl-button href="/api-delete/system/logfile/access" {{ confirm }}>clean</sl-button>
+          </sl-button-group>
+        </td>
+      </tr>
+    </table>
+  </sl-card>
+
+  <sl-card class="card-header">
+    <strong>mongodb collections / {{ stats.db | length }}</strong>
+    <table>
+      {% for k,v in stats.db.items() %}
+      <tr>
+        <td>{{ k }}</td>
+        <td>{{ v }}</td>
+      </tr>
       {% endfor %}
     </table>
-  </details>
+
+    <sl-divider></sl-divider>
+
+    <sl-button-group>
+      <sl-button href="/api/system/mongo/profile">profiling status</sl-button>
+      <sl-button href="/api/system/mongo/slow">slow queries</sl-button>
+    </sl-button-group>
+  </sl-card>
 
 
-  <details>
-    <summary><h5>async tasks / {{ stats.async_tasks | length }}</h5></summary>
-    <table class="sortable">
-      <thead>
+
+</div>
+
+<sl-divider></sl-divider>
+
+<sl-details summary="scheduler / {{ stats.scheduler.tasks | length }}">
+  <table>
+    <tr>
+      <th>task_id</th>
+      <th>interval</th>
+      <th>last_run</th>
+      <th>run_count</th>
+      <th>error_count</th>
+      <th>running</th>
+    </tr>
+    {% for t in stats.scheduler.tasks %}
+    <tr>
+      <td>{{ t.task_id }}</td>
+      <td>{{ t.interval }}</td>
+      <td>{{ t.last_run | dt }}</td>
+      <td>{{ t.run_count }}</td>
+      <td>{{ t.error_count }}</td>
+      <td>{{ t.running | yes_no }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</sl-details>
+
+<sl-divider></sl-divider>
+
+<sl-details summary="async tasks / {{ stats.async_tasks | length }}">
+  <table class="sortable">
+    <thead>
       <tr>
         <th>name</th>
         <th>core</th>
         <th>status</th>
         <th>running time, seconds</th>
       </tr>
-      </thead>
-      {% for t in stats.async_tasks %}
-        <tr>
-          <td>{{ t.name }}</td>
-          <td>{{ t.coro }}</td>
-          <td>{{ t.status }}</td>
-          <td> {% if t.running_time %}{{ t.running_time | round(2) }}{% endif %}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </details>
+    </thead>
+    {% for t in stats.async_tasks %}
+    <tr>
+      <td>{{ t.name }}</td>
+      <td>{{ t.coro }}</td>
+      <td>{{ t.status }}</td>
+      <td> {% if t.running_time %}{{ t.running_time | round(2) }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</sl-details>
 
-  <details>
-    <summary>
-      <h5>threads / {{ stats.threads | length }}</h5>
-    </summary>
-    <table>
-      <tr>
-        <th>name</th>
-        <th>daemon</th>
-        <th>func</th>
-      </tr>
-      {% for t in stats.threads %}
-        <tr>
-          <td>{{ t.name }}</td>
-          <td>{{ t.daemon | yes_no }}</td>
-          <td>{{ t.func_name | empty }}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </details>
+<sl-divider></sl-divider>
+
+<sl-details summary="threads / {{ stats.threads | length }}">
+  <table>
+    <tr>
+      <th>name</th>
+      <th>daemon</th>
+      <th>func</th>
+    </tr>
+    {% for t in stats.threads %}
+    <tr>
+      <td>{{ t.name }}</td>
+      <td>{{ t.daemon | yes_no }}</td>
+      <td>{{ t.func_name | empty }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</sl-details>
 
 {% endblock %}

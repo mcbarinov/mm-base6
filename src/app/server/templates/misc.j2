@@ -1,59 +1,62 @@
 {% extends "inc/base.j2" %}
 {% block content %}
-  <div>
-    <h3>mics</h3>
-  </div>
+<div class="page-header">
+  <h2>mics</h2>
+</div>
 
-  <div class="grid">
-    <section>
-      <b>response classes</b>
-      <ul>
-        <li><a href="/api/misc/result-ok">/api/misc/result-ok</a></li>
-        <li><a href="/api/misc/result-err">/api/misc/result-err</a></li>
-      </ul>
-    </section>
 
-    <section>
-      <b>errors</b>
-      <ul>
-        <li><a href="/api/misc/user-error">/api/misc/user-error</a></li>
-        <li><a href="/api/misc/runtime-error">/api/misc/runtime-error</a></li>
-      </ul>
-    </section>
 
-  <section>
+<div style="display: flex; gap: 1rem;">
+  <sl-card>
+    <b>response classes</b>
+    <ul>
+      <li><a href="/api/misc/result-ok">/api/misc/result-ok</a></li>
+      <li><a href="/api/misc/result-err">/api/misc/result-err</a></li>
+    </ul>
+  </sl-card>
+
+  <sl-card>
+    <b>errors</b>
+    <ul>
+      <li><a href="/api/misc/user-error">/api/misc/user-error</a></li>
+      <li><a href="/api/misc/runtime-error">/api/misc/runtime-error</a></li>
+    </ul>
+  </sl-card>
+
+  <sl-card>
     <b>other</b>
     <ul>
       <li><a href="/api-post/misc/update-dynamic-value">update dynamic value</a></li>
     </ul>
-  </section>
-  </div>
+  </sl-card>
+</div>
 
 
-  <hr>
+<sl-divider></sl-divider>
 
 
 
-  <section>
-    <b>empty filter</b><br>
-    Zero: {{ zero | empty }}<br>
-  </section>
+<sl-card>
+  <b>empty filter</b><br>
+  Zero: {{ zero | empty }}<br>
+</sl-card>
 
-  <hr>
+<sl-divider></sl-divider>
 
-  <form method="POST" action="/api/misc/upload" enctype="multipart/form-data">
-    <fieldset role="group">
-      <input type="file" name="file">
-      <input type="submit" value="upload">
-    </fieldset>
-  </form>
+<form method="POST" action="/api/misc/upload" enctype="multipart/form-data" class="inline">
+
+  <sl-input type="file" name="file"></sl-input>
+
+  <sl-button type="submit" variant="primary">upload</sl-button>
+  </fieldset>
+</form>
 
 
-<hr>
+<sl-divider></sl-divider>
 
-<section>
-<b>counter</b>
-value: {{ counter }}<br>
-</section>
+<sl-card>
+  <b>counter</b>
+  value: {{ counter }}<br>
+</sl-card>
 
 {% endblock %}

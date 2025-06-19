@@ -2,20 +2,21 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 import tomlkit
-from tomlkit.items import Float, Trivia
+from tomlkit.items import Float, Item, Trivia
 
 
-def encode_decimal(value: object) -> Float:
+def custom_encoder(value: object) -> Item:
     if isinstance(value, Decimal):
         return Float(value=float(value), trivia=Trivia(), raw=str(value))
     raise TypeError(f"Cannot convert {type(value)} to TOML item")
 
 
-tomlkit.register_encoder(encode_decimal)
+tomlkit.register_encoder(custom_encoder)
 
 
 def toml_dumps(data: Mapping[str, object], sort_keys: bool = False) -> str:
-    return tomlkit.dumps(data, sort_keys=sort_keys)
+    filtered_data = {k: v for k, v in data.items() if v is not None}
+    return tomlkit.dumps(filtered_data, sort_keys=sort_keys)
 
 
 def toml_loads(string: str | bytes) -> tomlkit.TOMLDocument:

@@ -1,11 +1,15 @@
 {% extends "inc/base.j2" %}
 {% block content %}
-  <h3>update state value / {{ key }}</h3>
 
-  <form method="post">
-    <textarea name="value" rows="10" cols="30">{{ value }}</textarea>
-    <input type="submit" value="update">
-  </form>
+<div class="page-header">
+  <h2>update state value / {{ key }}</h2>
+</div>
+
+<form method="post">
+  <sl-textarea name="value" rows="10" cols="30" value="{{ value }}"></sl-textarea>
+  <sl-divider></sl-divider>
+  <sl-button type="submit" variant="primary">update</sl-button>
+</form>
 
 
 
