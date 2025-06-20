@@ -1,6 +1,6 @@
 [project]
 name = "mm-base6"
-version = "0.6.0"
+version = "0.6.1"
 description = "Web framework with MongoDB integration and unified `self.core` access."
 requires-python = ">=3.13"
 dependencies = [

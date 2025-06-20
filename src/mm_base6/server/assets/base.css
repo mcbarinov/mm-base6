@@ -22,6 +22,12 @@ main {
 
 }
 
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 .inline {
     display: flex;
     align-items: center;
