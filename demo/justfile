@@ -40,7 +40,7 @@ docker-build:
 	docker build --build-arg python_version=${PYTHON_VERSION} --build-arg uv_version=${UV_VERSION} --platform {{docker_build_platform}} -t {{project_name}}:{{version}} --file docker/Dockerfile .
 	docker tag {{project_name}}:{{version}} {{project_name}}:latest
 
-docker-compose: 
+docker-compose:
 	cd docker && docker compose up --build
 
 docker-upload: docker-build

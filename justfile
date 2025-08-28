@@ -16,7 +16,7 @@ format:
     uv run ruff check --select I --fix src tests
     uv run ruff format src tests
 
-lint: format
+lint: format pre-commit
     uv run ruff check src tests
     uv run mypy src
 
@@ -40,3 +40,9 @@ demo:
 
 dev:
     uv run python -m watchfiles "python -m app.main" src
+
+pre-commit:
+    uv run pre-commit run --all-files
+
+pre-commit-autoupdate:
+    uv run pre-commit autoupdate
