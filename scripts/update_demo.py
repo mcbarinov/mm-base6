@@ -27,7 +27,7 @@ def update_demo() -> None:
         root_config = tomllib.load(f)
 
     current_version = root_config["project"]["version"]
-    root_dev_deps = root_config["tool"]["uv"]["dev-dependencies"]
+    root_dev_deps = root_config["dependency-groups"]["dev"]
 
     # 3. Read and update demo pyproject.toml
     demo_pyproject_path = demo_dir / "pyproject.toml"
@@ -45,25 +45,23 @@ def update_demo() -> None:
                     break
 
     # 5. Update dev-dependencies in demo (only existing ones)
-    tool_section = demo_config["tool"]
-    if isinstance(tool_section, dict):
-        uv_section = tool_section["uv"]
-        if isinstance(uv_section, dict):
-            demo_dev_deps = uv_section["dev-dependencies"]
-            if isinstance(demo_dev_deps, Array):
-                # Create lookup dict for root dev-dependencies
-                root_dev_deps_dict: dict[str, Any] = {}
-                for dep in root_dev_deps:
-                    if isinstance(dep, str) and "~=" in dep:
-                        name = dep.split("~=")[0]
-                        root_dev_deps_dict[name] = dep
+    dep_groups_section = demo_config["dependency-groups"]
+    if isinstance(dep_groups_section, dict):
+        demo_dev_deps = dep_groups_section["dev"]
+        if isinstance(demo_dev_deps, Array):
+            # Create lookup dict for root dev-dependencies
+            root_dev_deps_dict: dict[str, Any] = {}
+            for dep in root_dev_deps:
+                if isinstance(dep, str) and "~=" in dep:
+                    name = dep.split("~=")[0]
+                    root_dev_deps_dict[name] = dep
 
-                # Update existing demo dev-dependencies
-                for i, dep in enumerate(demo_dev_deps):
-                    if isinstance(dep, str) and "~=" in dep:
-                        name = dep.split("~=")[0]
-                        if name in root_dev_deps_dict:
-                            demo_dev_deps[i] = root_dev_deps_dict[name]
+            # Update existing demo dev-dependencies
+            for i, dep in enumerate(demo_dev_deps):
+                if isinstance(dep, str) and "~=" in dep:
+                    name = dep.split("~=")[0]
+                    if name in root_dev_deps_dict:
+                        demo_dev_deps[i] = root_dev_deps_dict[name]
 
     # 6. Write updated demo pyproject.toml
     with demo_pyproject_path.open("w", encoding="utf-8") as f:

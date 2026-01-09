@@ -38,7 +38,7 @@ class Setting(MongoModel[str]):
     updated_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "setting"
+    __collection__ = "setting"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["type", "value", "updated_at", "created_at"],
@@ -66,7 +66,7 @@ class State(MongoModel[str]):
     updated_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "state"
+    __collection__ = "state"
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {
             "required": ["value", "updated_at", "created_at"],
@@ -93,7 +93,7 @@ class Event(MongoModel[ObjectId]):
     data: object
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "event"
+    __collection__ = "event"
     __indexes__ = ["type", "created_at"]
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {

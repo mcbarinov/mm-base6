@@ -21,7 +21,7 @@ class Data(MongoModel[ObjectId]):
     value: int
     created_at: datetime = Field(default_factory=utc_now)
 
-    __collection__: str = "data"
+    __collection__ = "data"
     __indexes__ = ["status", "created_at"]
     __validator__: ClassVar[dict[str, object]] = {
         "$jsonSchema": {

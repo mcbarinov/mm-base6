@@ -42,8 +42,12 @@ async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
 
 
 def _custom_task_factory(
-    loop: asyncio.AbstractEventLoop, coro: Coroutine[Any, Any, Any], *, context: Context | None = None
+    loop: asyncio.AbstractEventLoop,
+    coro: Coroutine[Any, Any, Any],
+    *,
+    context: Context | None = None,
+    name: str | None = None,
 ) -> asyncio.tasks.Task[Any]:
-    task = asyncio.Task(coro, loop=loop, context=context)
+    task = asyncio.Task(coro, loop=loop, context=context, name=name)
     task.start_time = time.time()  # type: ignore[attr-defined] # Inject a start_time attribute (timestamp in seconds)
     return task

@@ -40,7 +40,7 @@ async def _api_method(method: str, url: str, server_config: ServerConfig, req: R
 
     if res.content_type and res.content_type.startswith("text/plain"):
         return PlainTextResponse(res.body)
-    json_res = res.parse_json_body(none_on_error=True)
+    json_res = res.parse_json(none_on_error=True)
     if json_res is not None:
         return json_res
     return res.body
