@@ -16,10 +16,10 @@ router: APIRouter = APIRouter(prefix="/api/system", tags=["system"])
 class CBV(InternalView):
     @router.get("/stats")
     async def get_stats(self) -> dict[str, object]:
-        logfile_app_size = await self.core.base_services.logfile.get_logfile_size("app")
-        logfile_access_size = await self.core.base_services.logfile.get_logfile_size("access")
-        psutil_stats = await self.core.base_services.stat.get_psutil_stats()
-        stats = await self.core.base_services.stat.get_stats(logfile_app_size, logfile_access_size)
+        logfile_app_size = await self.core.builtin_services.logfile.get_logfile_size("app")
+        logfile_access_size = await self.core.builtin_services.logfile.get_logfile_size("access")
+        psutil_stats = await self.core.builtin_services.stat.get_psutil_stats()
+        stats = await self.core.builtin_services.stat.get_stats(logfile_app_size, logfile_access_size)
         return psutil_stats | stats.model_dump()
 
     @router.get("/mongo/profile")
@@ -45,11 +45,11 @@ class CBV(InternalView):
 
     @router.get("/logfile/{file}", response_class=PlainTextResponse)
     async def get_logfile(self, file: str) -> str:
-        return await self.core.base_services.logfile.read_logfile(file)
+        return await self.core.builtin_services.logfile.read_logfile(file)
 
     @router.delete("/logfile/{file}")
     async def clean_logfile(self, file: str) -> None:
-        await self.core.base_services.logfile.clean_logfile(file)
+        await self.core.builtin_services.logfile.clean_logfile(file)
 
     @router.post("/scheduler/start")
     async def start_scheduler(self) -> None:
@@ -68,12 +68,12 @@ class CBV(InternalView):
         message = ""
         for i in range(1800):
             message += f"{i} "
-        return await self.core.base_services.telegram.send_message(message)
+        return await self.core.builtin_services.telegram.send_message(message)
 
     @router.post("/telegram/start-bot")
     async def start_telegram_bot(self) -> bool:
-        return await self.core.base_services.telegram.start_bot(self.telegram_bot)
+        return await self.core.builtin_services.telegram.start_bot(self.telegram_bot)
 
     @router.post("/telegram/shutdown-bot")
     async def shutdown_telegram_bot(self) -> bool:
-        return await self.core.base_services.telegram.shutdown_bot(self.telegram_bot)
+        return await self.core.builtin_services.telegram.shutdown_bot(self.telegram_bot)

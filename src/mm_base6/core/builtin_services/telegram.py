@@ -5,9 +5,9 @@ from mm_result import Result
 from mm_telegram import TelegramBot
 from pydantic import BaseModel
 
+from mm_base6.core.builtin_services.event import EventService
+from mm_base6.core.builtin_services.settings import SettingsService
 from mm_base6.core.errors import UserError
-from mm_base6.core.services.event import EventService
-from mm_base6.core.services.settings import SettingsService
 
 
 class TelegramMessageSettings(BaseModel):

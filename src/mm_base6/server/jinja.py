@@ -9,10 +9,10 @@ from mm_std import json_dumps
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
+from mm_base6.core.builtin_services.settings import SettingsModel
+from mm_base6.core.builtin_services.state import StateModel
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
-from mm_base6.core.services.settings import SettingsModel
-from mm_base6.core.services.state import StateModel
 from mm_base6.server import utils
 from mm_base6.server.config import ServerConfig
 

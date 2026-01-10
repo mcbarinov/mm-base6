@@ -9,7 +9,7 @@ The main value of mm-base6 is the `self.core` object available in your services 
 - **`core.settings`** - Type-safe persistent configuration
 - **`core.state`** - Application state with MongoDB persistence
 - **`core.event()`** - Event logging and monitoring
-- **`core.base_services.telegram`** - Message sending and bot management
+- **`core.builtin_services.telegram`** - Message sending and bot management
 - **`core.services`** - Your custom application services
 
 ```python
@@ -22,10 +22,10 @@ class MyService(Service):
         self.core.state.last_run = utc_now()
 
         # Log events
-        await self.core.base_services.event.event("task_completed", {"status": "success"})
+        await self.core.builtin_services.event.event("task_completed", {"status": "success"})
 
         # Send notifications
-        await self.core.base_services.telegram.send_message("Task done!")
+        await self.core.builtin_services.telegram.send_message("Task done!")
 
         # Use other services
         result = await self.core.services.data.process()

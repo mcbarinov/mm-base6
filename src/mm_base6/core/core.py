@@ -9,13 +9,13 @@ from mm_concurrency.async_scheduler import AsyncScheduler
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
 from pymongo import AsyncMongoClient
 
+from mm_base6.core.builtin_services import BuiltinServices
+from mm_base6.core.builtin_services.settings import SettingsModel
+from mm_base6.core.builtin_services.state import StateModel
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb
 from mm_base6.core.logger import configure_logging
 from mm_base6.core.service import create_services_from_registry, get_services
-from mm_base6.core.services import BaseServices
-from mm_base6.core.services.settings import SettingsModel
-from mm_base6.core.services.state import StateModel
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class CoreProtocol[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](Protocol):
     state: ST
     db: DB
     services: SR
-    base_services: BaseServices
+    builtin_services: BuiltinServices
     database: AsyncDatabaseAny
     scheduler: AsyncScheduler
 
@@ -76,7 +76,7 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
     settings: SC
     state: ST
     services: SR
-    base_services: BaseServices
+    builtin_services: BuiltinServices
 
     def __new__(cls, *_args: object, **_kwargs: object) -> Core[SC, ST, DB, SR]:
         raise TypeError("Use `Core.init()` instead of direct instantiation.")
@@ -119,10 +119,10 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         inst.database = conn.database
         inst.db = await db_cls.init_collections(conn.database)
 
-        inst.base_services = BaseServices.init(inst.db, inst.scheduler, core_config)
+        inst.builtin_services = BuiltinServices.init(inst.db, inst.scheduler, core_config)
 
-        inst.settings = await inst.base_services.settings.init_storage(inst.db.setting, settings_cls)
-        inst.state = await inst.base_services.state.init_storage(inst.db.state, state_cls)
+        inst.settings = await inst.builtin_services.settings.init_storage(inst.db.setting, settings_cls)
+        inst.state = await inst.builtin_services.state.init_storage(inst.db.state, state_cls)
 
         # Create and inject core into user services
         inst.services = create_services_from_registry(service_registry_cls)
@@ -189,4 +189,4 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
             data: Optional event payload data
         """
         logger.debug("event %s %s", event_type, data)
-        await self.base_services.event.event(event_type, data)
+        await self.builtin_services.event.event(event_type, data)

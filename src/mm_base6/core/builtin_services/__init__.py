@@ -3,18 +3,18 @@ from typing import Self
 
 from mm_concurrency.async_scheduler import AsyncScheduler
 
+from mm_base6.core.builtin_services.event import EventService
+from mm_base6.core.builtin_services.logfile import LogfileService
+from mm_base6.core.builtin_services.settings import SettingsService
+from mm_base6.core.builtin_services.stat import StatService
+from mm_base6.core.builtin_services.state import StateService
+from mm_base6.core.builtin_services.telegram import TelegramService
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb
-from mm_base6.core.services.event import EventService
-from mm_base6.core.services.logfile import LogfileService
-from mm_base6.core.services.settings import SettingsService
-from mm_base6.core.services.stat import StatService
-from mm_base6.core.services.state import StateService
-from mm_base6.core.services.telegram import TelegramService
 
 
 @dataclass
-class BaseServices:
+class BuiltinServices:
     """Container for framework's core services available to all applications.
 
     These services provide fundamental functionality needed by any application

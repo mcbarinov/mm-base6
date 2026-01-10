@@ -18,11 +18,11 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Lifespan
 
 from mm_base6 import CoreConfig, ServerConfig
+from mm_base6.core.builtin_services.settings import SettingsModel
+from mm_base6.core.builtin_services.state import StateModel
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
 from mm_base6.core.errors import UserError
-from mm_base6.core.services.settings import SettingsModel
-from mm_base6.core.services.state import StateModel
 from mm_base6.server import utils
 from mm_base6.server.jinja import JinjaConfig, init_env
 from mm_base6.server.middleware.auth import AccessTokenMiddleware

@@ -13,7 +13,7 @@ router = APIRouter(include_in_schema=False)
 
 
 @cbv(router)
-class PageCBV(AppView):
+class CBV(AppView):
     @router.get("/")
     async def index(self) -> HTMLResponse:
         return await self.render.html("index.j2")
@@ -30,9 +30,6 @@ class PageCBV(AppView):
         counter = self.core.services.misc.counter.get()
         return await self.render.html("misc.j2", zero=0, counter=counter)
 
-
-@cbv(router)
-class ActionCBV(AppView):
     @router.post("/data/{id}/inc")
     async def inc_data(self, id: ObjectId, value: Annotated[int, Form()]) -> RedirectResponse:
         await self.core.db.data.update_one({"_id": id}, {"$inc": {"value": value}})

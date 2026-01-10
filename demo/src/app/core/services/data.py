@@ -26,11 +26,11 @@ class DataService(Service[AppCore]):
 
     async def generate_many(self) -> MongoInsertManyResult:
         res = await http_request("https://httpbin.org/get")
-        await self.core.base_services.event.event(
+        await self.core.builtin_services.event.event(
             "generate_many", {"res": res.parse_json(none_on_error=True), "large-data": "abc" * 100}
         )
-        await self.core.base_services.event.event("ddd", self.core.settings.telegram_token)
-        await self.core.base_services.telegram.send_message("generate_many")
+        await self.core.builtin_services.event.event("ddd", self.core.settings.telegram_token)
+        await self.core.builtin_services.telegram.send_message("generate_many")
         new_data_list = [
             Data(id=ObjectId(), status=random.choice(list(DataStatus)), value=random.randint(0, 1_000_000)) for _ in range(10)
         ]

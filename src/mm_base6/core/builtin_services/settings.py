@@ -10,8 +10,8 @@ from mm_result import Result
 from mm_std import utc_now
 from pydantic import BaseModel, ConfigDict, Field
 
+from mm_base6.core.builtin_services.event import EventService
 from mm_base6.core.db import Setting, SettingType
-from mm_base6.core.services.event import EventService
 from mm_base6.core.utils import toml_dumps, toml_loads
 
 

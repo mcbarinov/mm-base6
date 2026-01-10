@@ -11,4 +11,4 @@ router: APIRouter = APIRouter(prefix="/api/system/settings", tags=["system"])
 class CBV(InternalView):
     @router.get("/toml", response_class=PlainTextResponse)
     async def get_settings_toml(self) -> str:
-        return self.core.base_services.settings.export_as_toml()
+        return self.core.builtin_services.settings.export_as_toml()

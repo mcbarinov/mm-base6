@@ -32,7 +32,7 @@ async def run[CoreType: CoreProtocol[Any, Any, Any, Any]](
     telegram_bot = None
     if telegram_handlers is not None:
         telegram_bot = TelegramBot(telegram_handlers, {"core": core})
-        telegram_bot_settings = core.base_services.telegram.get_bot_settings()
+        telegram_bot_settings = core.builtin_services.telegram.get_bot_settings()
         if telegram_bot_settings and telegram_bot_settings.auto_start:
             await telegram_bot.start(telegram_bot_settings.token, telegram_bot_settings.admins)
 
