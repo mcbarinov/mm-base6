@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from dataclasses import dataclass
-from typing import Any, Protocol, get_type_hints
+from typing import Any, Protocol
 
 from mm_concurrency import synchronized
 from mm_concurrency.async_scheduler import AsyncScheduler
@@ -13,31 +12,12 @@ from pymongo import AsyncMongoClient
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb
 from mm_base6.core.logger import configure_logging
-from mm_base6.core.services.event import EventService
-from mm_base6.core.services.logfile import LogfileService
-from mm_base6.core.services.settings import SettingsModel, SettingsService
-from mm_base6.core.services.stat import StatService
-from mm_base6.core.services.state import StateModel, StateService
-from mm_base6.core.services.telegram import TelegramService
+from mm_base6.core.service import create_services_from_registry, get_services
+from mm_base6.core.services import BaseServices
+from mm_base6.core.services.settings import SettingsModel
+from mm_base6.core.services.state import StateModel
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class BaseServices:
-    """Container for framework's core services available to all applications.
-
-    These services provide fundamental functionality needed by any application
-    built with the framework: event logging, settings management, state persistence,
-    statistics collection, log file operations, and Telegram integration.
-    """
-
-    event: EventService
-    settings: SettingsService
-    state: StateService
-    stat: StatService
-    logfile: LogfileService
-    telegram: TelegramService
 
 
 class CoreProtocol[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](Protocol):
@@ -139,65 +119,17 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         inst.database = conn.database
         inst.db = await db_cls.init_collections(conn.database)
 
-        # base services
-        event_service = EventService(inst.db)
-        stat_service = StatService(inst.db, inst.scheduler)
-        logfile_service = LogfileService(core_config)
-        settings_service = SettingsService(event_service)
-        state_service = StateService(event_service)
-        telegram_service = TelegramService(event_service, settings_service)
-        inst.base_services = BaseServices(
-            event=event_service,
-            settings=settings_service,
-            state=state_service,
-            stat=stat_service,
-            logfile=logfile_service,
-            telegram=telegram_service,
-        )
+        inst.base_services = BaseServices.init(inst.db, inst.scheduler, core_config)
 
-        inst.settings = await settings_service.init_storage(inst.db.setting, settings_cls)
-        inst.state = await state_service.init_storage(inst.db.state, state_cls)
+        inst.settings = await inst.base_services.settings.init_storage(inst.db.setting, settings_cls)
+        inst.state = await inst.base_services.state.init_storage(inst.db.state, state_cls)
 
-        # Create and inject services
-        inst.services = cls._create_services_from_registry_class(service_registry_cls)
-        inst._inject_core_into_services()
+        # Create and inject core into user services
+        inst.services = create_services_from_registry(service_registry_cls)
+        for service in get_services(inst.services):
+            service.set_core(inst)
 
         return inst
-
-    def _inject_core_into_services(self) -> None:
-        """Inject core instance into all user services extending Service."""
-        for attr_name in dir(self.services):
-            if not attr_name.startswith("_"):
-                service = getattr(self.services, attr_name)
-                if isinstance(service, Service):
-                    service.set_core(self)
-
-    async def _start_services(self) -> None:
-        """Call on_start() for all user services."""
-        for attr_name in dir(self.services):
-            if not attr_name.startswith("_"):
-                service = getattr(self.services, attr_name)
-                if isinstance(service, Service):
-                    await service.on_start()
-
-    async def _stop_services(self) -> None:
-        """Call on_stop() for all user services in reverse order."""
-        services: list[Service[Any]] = []
-        for attr_name in dir(self.services):
-            if not attr_name.startswith("_"):
-                service = getattr(self.services, attr_name)
-                if isinstance(service, Service):
-                    services.append(service)
-        for service in reversed(services):
-            await service.on_stop()
-
-    def _configure_services_scheduler(self) -> None:
-        """Call configure_scheduler() for all user services."""
-        for attr_name in dir(self.services):
-            if not attr_name.startswith("_"):
-                service = getattr(self.services, attr_name)
-                if isinstance(service, Service):
-                    service.configure_scheduler()
 
     @synchronized
     async def reinit_scheduler(self) -> None:
@@ -210,7 +142,9 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         if self.scheduler.is_running():
             await self.scheduler.stop()
         self.scheduler.clear_tasks()
-        self._configure_services_scheduler()
+        # Register scheduled tasks from user services
+        for service in get_services(self.services):
+            service.configure_scheduler()
         self.scheduler.start()
 
     async def startup(self) -> None:
@@ -219,7 +153,9 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         Calls on_start() for all services, initializes the task scheduler,
         and logs application start events.
         """
-        await self._start_services()
+        # Initialize user services
+        for service in get_services(self.services):
+            await service.on_start()
         await self.reinit_scheduler()
         logger.info("app started")
         if not self.core_config.debug:
@@ -231,7 +167,9 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         Calls on_stop() for all services, stops the scheduler,
         closes database connections, and logs shutdown events.
         """
-        await self._stop_services()
+        # Stop user services in reverse order
+        for service in reversed(get_services(self.services)):
+            await service.on_stop()
         await self.scheduler.stop()
         if not self.core_config.debug:
             await self.event("app_stop")
@@ -252,85 +190,3 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         """
         logger.debug("event %s %s", event_type, data)
         await self.base_services.event.event(event_type, data)
-
-    @staticmethod
-    def _create_services_from_registry_class(registry_cls: type[SR]) -> SR:
-        """Create service instances from ServiceRegistry class using introspection.
-
-        Automatically instantiates all services defined in the registry class
-        type annotations. Each annotated field becomes a service instance,
-        enabling declarative service registration without manual initialization.
-
-        Args:
-            registry_cls: Class with type annotations defining service types
-
-        Returns:
-            Registry instance with all services instantiated and ready for injection
-        """
-
-        registry = registry_cls()
-
-        # Get type annotations from the class, resolving string annotations safely
-        try:
-            annotations = get_type_hints(registry_cls)
-        except (NameError, AttributeError):
-            # Fallback to raw annotations if type hints can't be resolved
-            annotations = getattr(registry_cls, "__annotations__", {})
-
-        for attr_name, service_type_hint in annotations.items():
-            # Create service instance
-            service_instance = service_type_hint()
-            setattr(registry, attr_name, service_instance)
-
-        return registry
-
-
-class Service[T]:
-    """Base class for user services with lifecycle hooks.
-
-    Generic parameter T is the Core type, allowing type-safe access
-    to core without manual annotation in subclasses.
-
-    Example:
-        class MyService(Service[AppCore]):
-            async def on_start(self) -> None:
-                await self.core.db.my_collection.create_index("field")
-
-            def configure_scheduler(self) -> None:
-                self.core.scheduler.add_task("my_task", 60, self.my_task)
-
-            async def on_stop(self) -> None:
-                self._cache.clear()
-    """
-
-    _core: T | None = None
-
-    def set_core(self, core: T) -> None:
-        """Inject core reference (called during initialization)."""
-        self._core = core
-
-    @property
-    def core(self) -> T:
-        """Get the core application context."""
-        if self._core is None:
-            raise RuntimeError("Core not set for service")
-        return self._core
-
-    async def on_start(self) -> None:
-        """Initialize service on application startup.
-
-        Override to create database indexes, load caches, initialize connections.
-        """
-
-    async def on_stop(self) -> None:
-        """Cleanup service on application shutdown.
-
-        Override to close connections, flush caches, release resources.
-        """
-
-    def configure_scheduler(self) -> None:
-        """Register scheduled tasks for this service.
-
-        Called on startup and on scheduler reinit (when settings change).
-        Override to add tasks via self.core.scheduler.add_task().
-        """

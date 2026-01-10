@@ -1,9 +1,9 @@
 from .core.config import CoreConfig as CoreConfig
 from .core.core import Core as Core
 from .core.core import CoreProtocol as CoreProtocol
-from .core.core import Service as Service
 from .core.db import BaseDb as BaseDb
 from .core.errors import UserError as UserError
+from .core.service import Service as Service
 from .core.services.settings import SettingsModel as SettingsModel
 from .core.services.settings import setting_field as setting_field
 from .core.services.state import StateModel as StateModel
