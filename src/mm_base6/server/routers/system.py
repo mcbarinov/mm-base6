@@ -13,7 +13,7 @@ router: APIRouter = APIRouter(prefix="/api/system", tags=["system"])
 
 
 @cbv(router)
-class CBV(InternalView):
+class SystemRouter(InternalView):
     @router.get("/stats")
     async def get_stats(self) -> dict[str, object]:
         logfile_app_size = await self.core.builtin_services.logfile.get_logfile_size("app")

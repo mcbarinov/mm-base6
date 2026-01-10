@@ -12,7 +12,7 @@ router: APIRouter = APIRouter(include_in_schema=False)
 
 
 @cbv(router)
-class CBV(InternalView):
+class ApiMethodRouter(InternalView):
     @router.get("/api-post/{url:path}")
     async def api_post(self, url: str, request: Request) -> object:
         return await _api_method("post", url, self.server_config, request)

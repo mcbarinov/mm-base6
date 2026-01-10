@@ -4,7 +4,7 @@ from typing import Annotated
 
 from mm_std import utc_now
 
-from mm_base6 import CoreConfig, ServerConfig, BaseSettings, BaseState, setting_field, state_field
+from mm_base6 import BaseSettings, BaseState, CoreConfig, ServerConfig, setting_field, state_field
 
 core_config = CoreConfig()
 

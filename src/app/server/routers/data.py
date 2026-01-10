@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/data", tags=["data"])
 
 
 @cbv(router)
-class CBV(AppView):
+class DataRouter(AppView):
     @router.post("/generate-one")
     async def generate_one(self) -> MongoInsertOneResult:
         return await self.core.services.data.generate_one()

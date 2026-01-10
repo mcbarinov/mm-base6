@@ -9,7 +9,7 @@ router: APIRouter = APIRouter(prefix="/api/system/state", tags=["system"])
 
 
 @cbv(router)
-class CBV(InternalView):
+class StateRouter(InternalView):
     @router.get("/toml", response_class=PlainTextResponse)
     async def get_state_as_toml(self) -> str:
         return self.core.builtin_services.state.export_state_as_toml()

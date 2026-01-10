@@ -11,7 +11,7 @@ router: APIRouter = APIRouter(prefix="/system", include_in_schema=False)
 
 
 @cbv(router)
-class PageCBV(InternalView):
+class UiRouter(InternalView):
     @router.get("/")
     async def system_page(self) -> HTMLResponse:
         telegram_message_settings = self.core.builtin_services.telegram.get_message_settings()
@@ -44,7 +44,7 @@ class PageCBV(InternalView):
         return await self.render.html("state.j2", info=self.core.builtin_services.state.get_state_info())
 
     @router.get("/state/{key:str}")
-    async def update_state_value(self, key: str) -> HTMLResponse:
+    async def state_value_form(self, key: str) -> HTMLResponse:
         return await self.render.html(
             "state_update.j2", value=self.core.builtin_services.state.export_state_value_as_toml(key), key=key
         )
@@ -60,9 +60,6 @@ class PageCBV(InternalView):
         all_count = await self.core.db.event.count({})
         return await self.render.html("events.j2", events=events, type_stats=type_stats, form=form, all_count=all_count)
 
-
-@cbv(router)
-class ActionCBV(InternalView):
     @router.post("/settings")
     async def update_settings(self) -> RedirectResponse:
         data = cast(dict[str, str], self.form_data)

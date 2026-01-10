@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/misc", tags=["misc"])
 
 
 @cbv(router)
-class CBV(AppView):
+class MiscRouter(AppView):
     @router.get("/user-error")
     async def user_error(self) -> str:
         raise UserError("user bla bla bla")

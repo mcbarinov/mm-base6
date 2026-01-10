@@ -10,7 +10,7 @@ router: APIRouter = APIRouter(prefix="/api/system/events", tags=["system"])
 
 
 @cbv(router)
-class CBV(InternalView):
+class EventRouter(InternalView):
     @router.get("/{id}")
     async def get_event(self, id: ObjectId) -> Event:
         return await self.core.db.event.get(id)

@@ -12,7 +12,7 @@ router: APIRouter = APIRouter(prefix="/auth", include_in_schema=False)
 
 
 @cbv(router)
-class CBV(InternalView):
+class AuthRouter(InternalView):
     @router.get("/login")
     async def login_page(self) -> HTMLResponse:
         return await self.render.html("login.j2")

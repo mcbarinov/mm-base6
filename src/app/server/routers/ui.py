@@ -13,7 +13,7 @@ router = APIRouter(include_in_schema=False)
 
 
 @cbv(router)
-class CBV(AppView):
+class UiRouter(AppView):
     @router.get("/")
     async def index(self) -> HTMLResponse:
         return await self.render.html("index.j2")
