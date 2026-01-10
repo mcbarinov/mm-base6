@@ -14,7 +14,6 @@ async def main() -> None:
         state_cls=config.State,
         db_cls=Db,
         service_registry_cls=ServiceRegistry,
-        lifespan_cls=config.AppCoreLifecycle,
     )
 
     await run(

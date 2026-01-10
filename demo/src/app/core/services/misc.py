@@ -18,9 +18,7 @@ class ThreadSafeCounter:
             return self.value
 
 
-class MiscService(Service):
-    core: AppCore
-
+class MiscService(Service[AppCore]):
     def __init__(self) -> None:
         self.counter = ThreadSafeCounter()
 

@@ -12,8 +12,9 @@ from mm_base6 import Service
 logger = logging.getLogger(__name__)
 
 
-class DataService(Service):
-    core: AppCore
+class DataService(Service[AppCore]):
+    def configure_scheduler(self) -> None:
+        self.core.scheduler.add_task("generate_one", 60, self.generate_one)
 
     async def generate_one(self) -> MongoInsertOneResult:
         status = random.choice(list(DataStatus))

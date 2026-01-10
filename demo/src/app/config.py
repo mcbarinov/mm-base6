@@ -4,8 +4,7 @@ from typing import Annotated
 
 from mm_std import utc_now
 
-from app.core.types import AppCore
-from mm_base6 import CoreConfig, CoreLifecycle, ServerConfig, SettingsModel, StateModel, setting_field, state_field
+from mm_base6 import CoreConfig, ServerConfig, SettingsModel, StateModel, setting_field, state_field
 
 core_config = CoreConfig()
 
@@ -34,15 +33,3 @@ class State(StateModel):
     tmp2: Annotated[str, state_field("bla", "Temporary value 2")]
     processed_block: Annotated[int, state_field(111, "bla bla about processed_block")]
     last_checked_at: Annotated[datetime, state_field(utc_now(), "bla bla about last_checked_at", persistent=False)]
-
-
-class AppCoreLifecycle(CoreLifecycle[AppCore]):
-    async def configure_scheduler(self) -> None:
-        """Configure background scheduler tasks."""
-        self.core.scheduler.add_task("generate_one", 60, self.core.services.data.generate_one)
-
-    async def on_startup(self) -> None:
-        """Startup logic for the application."""
-
-    async def on_shutdown(self) -> None:
-        """Cleanup logic for the application."""

@@ -1,6 +1,5 @@
 from .core.config import CoreConfig as CoreConfig
 from .core.core import Core as Core
-from .core.core import CoreLifecycle as CoreLifecycle
 from .core.core import CoreProtocol as CoreProtocol
 from .core.core import Service as Service
 from .core.db import BaseDb as BaseDb
@@ -23,7 +22,6 @@ __all__ = [
     "BaseDb",
     "Core",
     "CoreConfig",
-    "CoreLifecycle",
     "CoreProtocol",
     "JinjaConfig",
     "ServerConfig",

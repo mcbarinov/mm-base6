@@ -75,7 +75,7 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
     - Settings and state persistence with type safety
     - Background task scheduling and management
     - Service registration and dependency injection
-    - Application lifecycle hooks (startup/shutdown)
+    - Service lifecycle hooks (on_start/on_stop/configure_scheduler)
     - Event logging and monitoring integration
 
     Example:
@@ -85,7 +85,6 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
             state_cls=MyState,
             db_cls=MyDb,
             service_registry_cls=MyServices,
-            lifespan_cls=MyLifecycle
         )
     """
 
@@ -99,9 +98,6 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
     services: SR
     base_services: BaseServices
 
-    # User-provided lifecycle
-    _lifecycle: CoreLifecycle[Core[SC, ST, DB, SR]] | None
-
     def __new__(cls, *_args: object, **_kwargs: object) -> Core[SC, ST, DB, SR]:
         raise TypeError("Use `Core.init()` instead of direct instantiation.")
 
@@ -113,7 +109,6 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         state_cls: type[ST],
         db_cls: type[DB],
         service_registry_cls: type[SR],
-        lifespan_cls: type[CoreLifecycle[Core[SC, ST, DB, SR]]] | None = None,
     ) -> Core[SC, ST, DB, SR]:
         """Initialize the Core with all services and dependencies.
 
@@ -127,7 +122,6 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
             state_cls: Application state model extending StateModel
             db_cls: Database class extending BaseDb with application collections
             service_registry_cls: Class containing application-specific services
-            lifespan_cls: Optional lifecycle handler for startup/shutdown hooks
 
         Returns:
             Fully initialized Core instance ready for use
@@ -144,9 +138,6 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         inst.mongo_client = conn.client
         inst.database = conn.database
         inst.db = await db_cls.init_collections(conn.database)
-
-        # Store user lifecycle class
-        inst._lifecycle = lifespan_cls(inst) if lifespan_cls else None
 
         # base services
         event_service = EventService(inst.db)
@@ -169,61 +160,81 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
 
         # Create and inject services
         inst.services = cls._create_services_from_registry_class(service_registry_cls)
-        await inst._inject_core_into_services()
+        inst._inject_core_into_services()
 
         return inst
 
-    async def _inject_core_into_services(self) -> None:
-        """Inject core instance into all user services extending Service.
-
-        Enables services to access core functionality like event logging,
-        settings, state, and other services through dependency injection.
-        """
+    def _inject_core_into_services(self) -> None:
+        """Inject core instance into all user services extending Service."""
         for attr_name in dir(self.services):
             if not attr_name.startswith("_"):
                 service = getattr(self.services, attr_name)
                 if isinstance(service, Service):
-                    service.core = self
+                    service.set_core(self)
+
+    async def _start_services(self) -> None:
+        """Call on_start() for all user services."""
+        for attr_name in dir(self.services):
+            if not attr_name.startswith("_"):
+                service = getattr(self.services, attr_name)
+                if isinstance(service, Service):
+                    await service.on_start()
+
+    async def _stop_services(self) -> None:
+        """Call on_stop() for all user services in reverse order."""
+        services: list[Service[Any]] = []
+        for attr_name in dir(self.services):
+            if not attr_name.startswith("_"):
+                service = getattr(self.services, attr_name)
+                if isinstance(service, Service):
+                    services.append(service)
+        for service in reversed(services):
+            await service.on_stop()
+
+    def _configure_services_scheduler(self) -> None:
+        """Call configure_scheduler() for all user services."""
+        for attr_name in dir(self.services):
+            if not attr_name.startswith("_"):
+                service = getattr(self.services, attr_name)
+                if isinstance(service, Service):
+                    service.configure_scheduler()
 
     @synchronized
     async def reinit_scheduler(self) -> None:
         """Reinitialize the background task scheduler.
 
         Stops the current scheduler, clears all tasks, reconfigures tasks
-        through the lifecycle handler, and restarts. Used for dynamic
-        task management and scheduler updates during runtime.
+        through service configure_scheduler() methods, and restarts.
         """
         logger.debug("Reinitializing scheduler...")
         if self.scheduler.is_running():
             await self.scheduler.stop()
         self.scheduler.clear_tasks()
-        await self.configure_scheduler()
+        self._configure_services_scheduler()
         self.scheduler.start()
 
     async def startup(self) -> None:
-        """Start the application with lifecycle hooks and scheduler.
+        """Start the application with service initialization and scheduler.
 
-        Calls user-defined startup logic, initializes the task scheduler,
-        and logs application start events. This is called automatically
-        by the framework during application launch.
+        Calls on_start() for all services, initializes the task scheduler,
+        and logs application start events.
         """
-        await self.start()
+        await self._start_services()
         await self.reinit_scheduler()
         logger.info("app started")
         if not self.core_config.debug:
             await self.event("app_start")
 
     async def shutdown(self) -> None:
-        """Shutdown the application with cleanup and lifecycle hooks.
+        """Shutdown the application with service cleanup.
 
-        Stops the scheduler, calls user-defined shutdown logic,
+        Calls on_stop() for all services, stops the scheduler,
         closes database connections, and logs shutdown events.
-        Performs a hard exit to ensure complete process termination.
         """
+        await self._stop_services()
         await self.scheduler.stop()
         if not self.core_config.debug:
             await self.event("app_stop")
-        await self.stop()
         await self.mongo_client.close()
         logger.info("app stopped")
         # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -241,33 +252,6 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         """
         logger.debug("event %s %s", event_type, data)
         await self.base_services.event.event(event_type, data)
-
-    async def configure_scheduler(self) -> None:
-        """Call user-provided scheduler configuration through lifecycle handler.
-
-        Delegates to the application's CoreLifecycle.configure_scheduler() method
-        if a lifecycle handler was provided during initialization.
-        """
-        if self._lifecycle:
-            await self._lifecycle.configure_scheduler()
-
-    async def start(self) -> None:
-        """Call user-provided startup logic through lifecycle handler.
-
-        Delegates to the application's CoreLifecycle.on_startup() method
-        if a lifecycle handler was provided during initialization.
-        """
-        if self._lifecycle:
-            await self._lifecycle.on_startup()
-
-    async def stop(self) -> None:
-        """Call user-provided shutdown logic through lifecycle handler.
-
-        Delegates to the application's CoreLifecycle.on_shutdown() method
-        if a lifecycle handler was provided during initialization.
-        """
-        if self._lifecycle:
-            await self._lifecycle.on_shutdown()
 
     @staticmethod
     def _create_services_from_registry_class(registry_cls: type[SR]) -> SR:
@@ -301,27 +285,52 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
         return registry
 
 
-class Service:
-    """Base class for user services. Core will be automatically injected."""
+class Service[T]:
+    """Base class for user services with lifecycle hooks.
 
-    core: Any  # Will be properly typed by user with type alias
+    Generic parameter T is the Core type, allowing type-safe access
+    to core without manual annotation in subclasses.
 
+    Example:
+        class MyService(Service[AppCore]):
+            async def on_start(self) -> None:
+                await self.core.db.my_collection.create_index("field")
 
-class CoreLifecycle[T: "CoreProtocol[Any, Any, Any, Any]"]:
-    """Base class for core lifecycle management.
+            def configure_scheduler(self) -> None:
+                self.core.scheduler.add_task("my_task", 60, self.my_task)
 
-    Provides hooks for scheduler configuration, startup, and shutdown logic.
-    The core instance is available through self.core with proper typing.
+            async def on_stop(self) -> None:
+                self._cache.clear()
     """
 
-    def __init__(self, core: T) -> None:
-        self.core = core
+    _core: T | None = None
 
-    async def configure_scheduler(self) -> None:
-        """Configure background scheduler tasks."""
+    def set_core(self, core: T) -> None:
+        """Inject core reference (called during initialization)."""
+        self._core = core
 
-    async def on_startup(self) -> None:
-        """Core startup logic."""
+    @property
+    def core(self) -> T:
+        """Get the core application context."""
+        if self._core is None:
+            raise RuntimeError("Core not set for service")
+        return self._core
 
-    async def on_shutdown(self) -> None:
-        """Core shutdown logic."""
+    async def on_start(self) -> None:
+        """Initialize service on application startup.
+
+        Override to create database indexes, load caches, initialize connections.
+        """
+
+    async def on_stop(self) -> None:
+        """Cleanup service on application shutdown.
+
+        Override to close connections, flush caches, release resources.
+        """
+
+    def configure_scheduler(self) -> None:
+        """Register scheduled tasks for this service.
+
+        Called on startup and on scheduler reinit (when settings change).
+        Override to add tasks via self.core.scheduler.add_task().
+        """
