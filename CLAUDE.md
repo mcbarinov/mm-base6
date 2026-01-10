@@ -17,3 +17,4 @@
 Before working on this codebase, read these documents:
 1. `README.md` - Project overview and API
 2. `ADR.md` - Architectural decisions and rationale
+3. `DEVELOPMENT.md` - Project structure

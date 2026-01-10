@@ -6,25 +6,42 @@ Web framework with MongoDB integration and unified `self.core` access.
 
 ```python
 # app/config.py
+from typing import Annotated
+from datetime import datetime
+
 from mm_base6 import CoreConfig, ServerConfig, BaseSettings, BaseState, setting_field, state_field
 
 core_config = CoreConfig()
 server_config = ServerConfig()
 
 class Settings(BaseSettings):
-    api_token: Annotated[str, setting_field("", "API token", hide=True)]
+    api_token: Annotated[str, setting_field("", "API token", hide=True)]  # hide=True excludes from exports
     check_interval: Annotated[int, setting_field(60, "Check interval in seconds")]
 
 class State(BaseState):
     last_run: Annotated[datetime | None, state_field(None)]
-    counter: Annotated[int, state_field(0, persistent=False)]  # not saved to DB
+    counter: Annotated[int, state_field(0, persistent=False)]  # persistent=False: memory-only, not saved to DB
+```
+
+## Type Aliases
+
+```python
+# app/core/types.py
+from mm_base6 import Core, View
+
+AppCore = Core[Settings, State, Db, ServiceRegistry]
+AppView = View[Settings, State, Db, ServiceRegistry]
 ```
 
 ## MongoDB Model
 
 ```python
 # app/core/db.py
-from mm_mongo import AsyncMongoCollection, MongoModel
+from datetime import datetime
+
+from bson import ObjectId
+from pydantic import Field
+from mm_mongo import AsyncMongoCollection, MongoModel, utc_now
 from mm_base6 import BaseDb
 
 class User(MongoModel[ObjectId]):
@@ -43,13 +60,22 @@ class Db(BaseDb):
 
 ```python
 # app/core/services/user.py
+from datetime import timedelta
+
+from mm_mongo import utc_now
 from mm_base6 import Service
 
 class UserService(Service[AppCore]):
     async def on_start(self):
+        """Called during app startup."""
         await self.core.db.user.create_indexes()
 
+    async def on_stop(self):
+        """Called during app shutdown."""
+        pass
+
     def configure_scheduler(self):
+        """Register background tasks."""
         self.core.scheduler.add_task("cleanup", 3600, self.cleanup_old_users)
 
     async def cleanup_old_users(self):
@@ -58,10 +84,19 @@ class UserService(Service[AppCore]):
         await self.core.event("users_cleaned", {"cutoff": cutoff})
 ```
 
+## Events
+
+```python
+# Log events for audit/debugging
+await self.core.event("user_created", {"user_id": str(user.id)})
+await self.core.event("payment_processed", {"amount": 100})
+```
+
 ## Router (CBV)
 
 ```python
 # app/server/routers/user.py
+from bson import ObjectId
 from fastapi import APIRouter
 from mm_base6 import cbv
 
@@ -69,6 +104,8 @@ router = APIRouter(prefix="/api/user", tags=["user"])
 
 @cbv(router)
 class CBV(AppView):
+    # Auto-injected: self.core, self.server_config, self.render, self.form_data
+
     @router.get("/{id}")
     async def get_user(self, id: ObjectId) -> User:
         return await self.core.db.user.get(id)
@@ -79,6 +116,44 @@ class CBV(AppView):
         await self.core.db.user.insert_one(user)
         return user
 ```
+
+## Telegram
+
+```python
+# In Settings
+telegram_token: Annotated[str, setting_field("", "Bot token", hide=True)]
+telegram_chat_id: Annotated[str, setting_field("", "Chat ID")]
+
+# Send message
+await self.core.builtin_services.telegram.send_message("Deploy complete!")
+```
+
+## Running the App
+
+```python
+# app/main.py
+from mm_base6 import run
+
+await run(
+    core=core,
+    server_config=server_config,
+    jinja_config_cls=MyJinjaConfig,
+    telegram_handlers=None,
+    host="0.0.0.0",
+    port=8000,
+    uvicorn_log_level="info",
+)
+```
+
+## Built-in System API
+
+Framework provides `/api/system/*` endpoints:
+- **Settings/State**: TOML export/import
+- **Events**: query and delete
+- **Stats**: app and system metrics
+- **Logs**: read/clear app.log, access.log
+- **Scheduler**: start/stop/reinit
+- **Telegram**: send test message, start/stop bot
 
 ## Naming Conventions
 
