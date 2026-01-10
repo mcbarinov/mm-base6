@@ -10,8 +10,8 @@ from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
 from pymongo import AsyncMongoClient
 
 from mm_base6.core.builtin_services import BuiltinServices
-from mm_base6.core.builtin_services.settings import SettingsModel
-from mm_base6.core.builtin_services.state import StateModel
+from mm_base6.core.builtin_services.settings import BaseSettings
+from mm_base6.core.builtin_services.state import BaseState
 from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb
 from mm_base6.core.logger import configure_logging
@@ -20,7 +20,7 @@ from mm_base6.core.service import create_services_from_registry, get_services
 logger = logging.getLogger(__name__)
 
 
-class CoreProtocol[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](Protocol):
+class CoreProtocol[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](Protocol):
     """Protocol defining the interface that all Core implementations must provide.
 
     Enables type-safe dependency injection in FastAPI routes and services.
@@ -42,7 +42,7 @@ class CoreProtocol[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](Protocol):
     async def reinit_scheduler(self) -> None: ...
 
 
-class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
+class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
     """Central application framework providing integrated services and lifecycle management.
 
     Core orchestrates all framework components: MongoDB collections, settings/state management,
@@ -98,8 +98,8 @@ class Core[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR]:
 
         Args:
             core_config: Framework configuration (database URL, data directory, etc.)
-            settings_cls: Application settings model extending SettingsModel
-            state_cls: Application state model extending StateModel
+            settings_cls: Application settings model extending BaseSettings
+            state_cls: Application state model extending BaseState
             db_cls: Database class extending BaseDb with application collections
             service_registry_cls: Class containing application-specific services
 

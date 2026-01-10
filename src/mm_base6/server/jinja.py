@@ -9,8 +9,8 @@ from mm_std import json_dumps
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from mm_base6.core.builtin_services.settings import SettingsModel
-from mm_base6.core.builtin_services.state import StateModel
+from mm_base6.core.builtin_services.settings import BaseSettings
+from mm_base6.core.builtin_services.state import BaseState
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
 from mm_base6.server import utils
@@ -45,7 +45,7 @@ class JinjaConfig[T: "CoreProtocol[Any, Any, Any, Any]"]:
         return Markup("")
 
 
-def init_env[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
+def init_env[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
     core: CoreProtocol[SC, ST, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig[Any]
 ) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])

@@ -18,8 +18,8 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Lifespan
 
 from mm_base6 import CoreConfig, ServerConfig
-from mm_base6.core.builtin_services.settings import SettingsModel
-from mm_base6.core.builtin_services.state import StateModel
+from mm_base6.core.builtin_services.settings import BaseSettings
+from mm_base6.core.builtin_services.state import BaseState
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
 from mm_base6.core.errors import UserError
@@ -55,7 +55,7 @@ def init_server[CoreType: CoreProtocol[Any, Any, Any, Any]](
 
 
 # noinspection PyUnresolvedReferences
-def configure_state[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
+def configure_state[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
     app: FastAPI,
     core: CoreProtocol[SC, ST, DB, SR],
     telegram_bot: TelegramBot | None,
@@ -108,7 +108,7 @@ def configure_exception_handler(app: FastAPI, core_config: CoreConfig) -> None:
         return PlainTextResponse(message, status_code=500)
 
 
-def configure_lifespan[SC: SettingsModel, ST: StateModel, DB: BaseDb, SR](
+def configure_lifespan[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
     core: CoreProtocol[SC, ST, DB, SR],
 ) -> Lifespan[FastAPI]:
     @asynccontextmanager

@@ -30,7 +30,7 @@ class Setting(MongoModel[str]):
 
     Settings are stored as strings in the database with type metadata
     to enable proper conversion back to Python types. Used by SettingsService
-    to persist SettingsModel fields with validation and type safety.
+    to persist BaseSettings fields with validation and type safety.
     """
 
     type: SettingType
@@ -59,7 +59,7 @@ class State(MongoModel[str]):
 
     State values are serialized (pickled and base64-encoded) for storage
     and automatically restored when loaded. Used by StateService to persist
-    StateModel fields that are marked as persistent=True.
+    BaseState fields that are marked as persistent=True.
     """
 
     value: str

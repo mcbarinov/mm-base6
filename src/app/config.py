@@ -4,7 +4,7 @@ from typing import Annotated
 
 from mm_std import utc_now
 
-from mm_base6 import CoreConfig, ServerConfig, SettingsModel, StateModel, setting_field, state_field
+from mm_base6 import BaseSettings, BaseState, CoreConfig, ServerConfig, setting_field, state_field
 
 core_config = CoreConfig()
 
@@ -13,7 +13,7 @@ server_config.tags = ["data", "misc"]
 server_config.main_menu = {"/data": "data", "/misc": "misc"}
 
 
-class Settings(SettingsModel):
+class Settings(BaseSettings):
     proxies_url: Annotated[str, setting_field("http://localhost:8000", "proxies url, each proxy on new line")]
     telegram_token: Annotated[str, setting_field("", "telegram bot token", hide=True)]
     telegram_chat_id: Annotated[int, setting_field(0, "telegram chat id")]
@@ -26,7 +26,7 @@ class Settings(SettingsModel):
     long_cfg_1: Annotated[str, setting_field("many lines\n" * 5)]
 
 
-class State(StateModel):
+class State(BaseState):
     proxies: Annotated[list[str], state_field([], "List of proxy URLs")]
     proxies_updated_at: Annotated[datetime | None, state_field(None, "Last proxy update timestamp")]
     tmp1: Annotated[str, state_field("bla", "Temporary value 1")]

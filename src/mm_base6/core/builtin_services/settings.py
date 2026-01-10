@@ -16,11 +16,11 @@ from mm_base6.core.utils import toml_dumps, toml_loads
 
 
 def setting_field[T](default: T, description: str = "", hide: bool = False) -> T:
-    """Create a settings field with metadata for SettingsModel."""
+    """Create a settings field with metadata for BaseSettings."""
     return Field(default=default, description=description, json_schema_extra={"hide": hide})
 
 
-class SettingsModel(BaseModel):
+class BaseSettings(BaseModel):
     """Base class for application settings with Pydantic validation."""
 
     model_config = ConfigDict(
@@ -75,7 +75,7 @@ class SettingsInfo(BaseModel):
 class SettingsService:
     """Service for managing application settings with database persistence.
 
-    Automatically synchronizes SettingsModel fields with MongoDB storage,
+    Automatically synchronizes BaseSettings fields with MongoDB storage,
     handling type conversion and validation. Settings are stored as strings
     with type metadata for proper Python type restoration. Provides live
     updates with automatic database persistence when settings change.
@@ -83,11 +83,11 @@ class SettingsService:
 
     def __init__(self, event_service: EventService) -> None:
         self.event_service = event_service
-        self.storage: SettingsModel | None = None
+        self.storage: BaseSettings | None = None
         self.collection: AsyncMongoCollection[str, Setting] | None = None
 
     @synchronized
-    async def init_storage[SETTINGS: SettingsModel](
+    async def init_storage[SETTINGS: BaseSettings](
         self,
         collection: AsyncMongoCollection[str, Setting],
         settings_class: type[SETTINGS],
@@ -96,7 +96,7 @@ class SettingsService:
 
         Loads existing settings from MongoDB, creates missing ones with defaults,
         and removes obsolete settings. Ensures database schema matches the
-        current SettingsModel definition.
+        current BaseSettings definition.
 
         Args:
             collection: MongoDB collection for storing settings

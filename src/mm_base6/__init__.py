@@ -1,6 +1,6 @@
-from .core.builtin_services.settings import SettingsModel as SettingsModel
+from .core.builtin_services.settings import BaseSettings as BaseSettings
 from .core.builtin_services.settings import setting_field as setting_field
-from .core.builtin_services.state import StateModel as StateModel
+from .core.builtin_services.state import BaseState as BaseState
 from .core.builtin_services.state import state_field as state_field
 from .core.config import CoreConfig as CoreConfig
 from .core.core import Core as Core
@@ -20,14 +20,14 @@ from .run import run as run
 
 __all__ = [
     "BaseDb",
+    "BaseSettings",
+    "BaseState",
     "Core",
     "CoreConfig",
     "CoreProtocol",
     "JinjaConfig",
     "ServerConfig",
     "Service",
-    "SettingsModel",
-    "StateModel",
     "UserError",
     "View",
     "cbv",

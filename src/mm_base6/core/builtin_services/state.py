@@ -16,11 +16,11 @@ from mm_base6.core.utils import toml_dumps, toml_loads
 
 
 def state_field[T](default: T, description: str = "", persistent: bool = True) -> T:
-    """Create a state field with metadata for StateModel."""
+    """Create a state field with metadata for BaseState."""
     return Field(default=default, description=description, json_schema_extra={"persistent": persistent})
 
 
-class StateModel(BaseModel):
+class BaseState(BaseModel):
     """Base class for state management using Pydantic."""
 
     model_config = {"extra": "forbid", "arbitrary_types_allowed": True}
@@ -37,20 +37,20 @@ class StateInfo(BaseModel):
 class StateService:
     """Service for managing application state with MongoDB persistence.
 
-    Handles StateModel fields with automatic serialization/deserialization using pickle.
+    Handles BaseState fields with automatic serialization/deserialization using pickle.
     Supports both persistent (saved to DB) and transient (memory-only) state fields.
     Provides automatic database synchronization when persistent state values change.
     """
 
     def __init__(self, event_service: EventService) -> None:
         self.event_service = event_service
-        self.storage: StateModel | None = None
+        self.storage: BaseState | None = None
         self.collection: AsyncMongoCollection[str, State] | None = None
         self.persistent: dict[str, bool] = {}
         self.descriptions: dict[str, str] = {}
 
     @synchronized
-    async def init_storage[STATE: StateModel](
+    async def init_storage[STATE: BaseState](
         self,
         collection: AsyncMongoCollection[str, State],
         state_class: type[STATE],
