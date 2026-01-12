@@ -14,7 +14,6 @@ from mm_base6.core.builtin_services.state import BaseState
 from mm_base6.core.core import CoreProtocol
 from mm_base6.core.db import BaseDb
 from mm_base6.server import utils
-from mm_base6.server.config import ServerConfig
 
 
 def event_data_truncate(data: object) -> str:
@@ -46,7 +45,7 @@ class JinjaConfig[T: "CoreProtocol[Any, Any, Any, Any]"]:
 
 
 def init_env[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
-    core: CoreProtocol[SC, ST, DB, SR], server_config: ServerConfig, jinja_config: JinjaConfig[Any]
+    core: CoreProtocol[SC, ST, DB, SR], jinja_config: JinjaConfig[Any]
 ) -> Environment:
     loader = ChoiceLoader([PackageLoader("mm_base6.server"), PackageLoader("app.server")])
 
@@ -54,8 +53,7 @@ def init_env[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
         "event_data_truncate": event_data_truncate,
     }
     custom_globals: dict[str, Any] = {
-        "core_config": core.core_config,
-        "server_config": server_config,
+        "config": core.config,
         "settings": core.settings,
         "state": core.state,
         "confirm": Markup(""" onclick="return confirm('sure?')" """),

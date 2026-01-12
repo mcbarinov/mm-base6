@@ -3,7 +3,7 @@ from mm_http import http_request
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
-from mm_base6 import ServerConfig
+from mm_base6.config import Config
 from mm_base6.server.cbv import cbv
 from mm_base6.server.deps import InternalView
 from mm_base6.server.middleware.auth import ACCESS_TOKEN_NAME
@@ -15,19 +15,20 @@ router: APIRouter = APIRouter(include_in_schema=False)
 class ApiMethodRouter(InternalView):
     @router.get("/api-post/{url:path}")
     async def api_post(self, url: str, request: Request) -> object:
-        return await _api_method("post", url, self.server_config, request)
+        return await _api_method("post", url, self.config, request)
 
     @router.get("/api-delete/{url:path}")
     async def api_delete(self, url: str, request: Request) -> object:
-        return await _api_method("delete", url, self.server_config, request)
+        return await _api_method("delete", url, self.config, request)
 
 
-async def _api_method(method: str, url: str, server_config: ServerConfig, req: Request) -> object:
+async def _api_method(method: str, url: str, config: Config, req: Request) -> object:
     base_url = str(req.base_url)
     if not base_url.endswith("/"):
         base_url = base_url + "/"
     url = base_url + "api/" + url
-    if server_config.use_https:
+    # TODO: Replace use_https with base_url config or X-Forwarded-Proto header support
+    if config.use_https:
         url = url.replace("http://", "https://", 1)
     if req.query_params:
         q = ""
@@ -35,7 +36,7 @@ async def _api_method(method: str, url: str, server_config: ServerConfig, req: R
             q += f"{k}={v}&"
         url += f"?{q}"
 
-    headers = {ACCESS_TOKEN_NAME: server_config.access_token}
+    headers = {ACCESS_TOKEN_NAME: config.access_token}
     res = await http_request(url, method=method, headers=headers, json=dict(req.query_params), timeout=600)
 
     if res.content_type and res.content_type.startswith("text/plain"):

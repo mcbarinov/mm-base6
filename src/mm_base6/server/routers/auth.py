@@ -20,13 +20,11 @@ class AuthRouter(InternalView):
     @router.post("/login")
     async def login(self, token: Annotated[str, Form()]) -> RedirectResponse:
         response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(
-            ACCESS_TOKEN_NAME, value=token, domain=self.server_config.domain, httponly=True, max_age=60 * 60 * 24 * 30
-        )
+        response.set_cookie(ACCESS_TOKEN_NAME, value=token, domain=self.config.domain, httponly=True, max_age=60 * 60 * 24 * 30)
         return response
 
     @router.get("/logout")
     async def logout(self) -> RedirectResponse:
         response = RedirectResponse(url="/")
-        response.delete_cookie(ACCESS_TOKEN_NAME, domain=self.server_config.domain)
+        response.delete_cookie(ACCESS_TOKEN_NAME, domain=self.config.domain)
         return response

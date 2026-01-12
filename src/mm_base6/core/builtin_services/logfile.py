@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import anyio
 
-from mm_base6.core.config import CoreConfig
+from mm_base6.config import Config
 
 
 class LogfileService:
@@ -13,9 +13,9 @@ class LogfileService:
     and access logs (HTTP requests from uvicorn/FastAPI).
     """
 
-    def __init__(self, core_config: CoreConfig) -> None:
-        self.logfile_app = anyio.Path(core_config.data_dir / "app.log")
-        self.logfile_access = anyio.Path(core_config.data_dir / "access.log")
+    def __init__(self, config: Config) -> None:
+        self.logfile_app = anyio.Path(config.data_dir / "app.log")
+        self.logfile_access = anyio.Path(config.data_dir / "access.log")
 
     async def read_logfile(self, file: str) -> str:
         """Read the contents of a log file.

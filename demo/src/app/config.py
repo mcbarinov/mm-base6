@@ -4,13 +4,9 @@ from typing import Annotated
 
 from mm_std import utc_now
 
-from mm_base6 import BaseSettings, BaseState, CoreConfig, ServerConfig, setting_field, state_field
+from mm_base6 import BaseSettings, BaseState, Config, setting_field, state_field
 
-core_config = CoreConfig()
-
-server_config = ServerConfig()
-server_config.tags = ["data", "misc"]
-server_config.main_menu = {"/data": "data", "/misc": "misc"}
+config = Config(openapi_tags=["data", "misc"], ui_menu={"/data": "data", "/misc": "misc"})
 
 
 class Settings(BaseSettings):

@@ -3,13 +3,13 @@ from typing import Self
 
 from mm_concurrency.async_scheduler import AsyncScheduler
 
+from mm_base6.config import Config
 from mm_base6.core.builtin_services.event import EventService
 from mm_base6.core.builtin_services.logfile import LogfileService
 from mm_base6.core.builtin_services.settings import SettingsService
 from mm_base6.core.builtin_services.stat import StatService
 from mm_base6.core.builtin_services.state import StateService
 from mm_base6.core.builtin_services.telegram import TelegramService
-from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb
 
 
@@ -30,7 +30,7 @@ class BuiltinServices:
     telegram: TelegramService
 
     @classmethod
-    def init(cls, db: BaseDb, scheduler: AsyncScheduler, core_config: CoreConfig) -> Self:
+    def init(cls, db: BaseDb, scheduler: AsyncScheduler, config: Config) -> Self:
         """Create all framework services with their dependencies."""
         event = EventService(db)
         settings = SettingsService(event)
@@ -40,6 +40,6 @@ class BuiltinServices:
             settings=settings,
             state=state,
             stat=StatService(db, scheduler),
-            logfile=LogfileService(core_config),
+            logfile=LogfileService(config),
             telegram=TelegramService(event, settings),
         )

@@ -5,7 +5,7 @@ from jinja2 import Environment
 from mm_telegram import TelegramBot
 from starlette.datastructures import FormData
 
-from mm_base6 import ServerConfig
+from mm_base6.config import Config
 from mm_base6.core.builtin_services.settings import BaseSettings
 from mm_base6.core.builtin_services.state import BaseState
 from mm_base6.core.core import CoreProtocol
@@ -24,8 +24,8 @@ async def get_render(request: Request) -> Render:
     return Render(jinja_env, request)
 
 
-async def get_server_config(request: Request) -> ServerConfig:
-    return cast(ServerConfig, request.app.state.server_config)
+async def get_config(request: Request) -> Config:
+    return cast(Config, request.app.state.core.config)
 
 
 async def get_form_data(request: Request) -> FormData:
@@ -39,7 +39,7 @@ async def get_telegram_bot(request: Request) -> TelegramBot:
 class View[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
     core: CoreProtocol[SC, ST, DB, SR] = Depends(get_core)
     telegram_bot: TelegramBot = Depends(get_telegram_bot)
-    server_config: ServerConfig = Depends(get_server_config)
+    config: Config = Depends(get_config)
     form_data: FormData = Depends(get_form_data)
     render: Render = Depends(get_render)
 

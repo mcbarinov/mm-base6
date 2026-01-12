@@ -9,10 +9,9 @@ Web framework with MongoDB integration and unified `self.core` access.
 from typing import Annotated
 from datetime import datetime
 
-from mm_base6 import CoreConfig, ServerConfig, BaseSettings, BaseState, setting_field, state_field
+from mm_base6 import Config, BaseSettings, BaseState, setting_field, state_field
 
-core_config = CoreConfig()
-server_config = ServerConfig()
+config = Config(openapi_tags=["user"], ui_menu={"/users": "Users"})
 
 class Settings(BaseSettings):
     api_token: Annotated[str, setting_field("", "API token", hide=True)]  # hide=True excludes from exports
@@ -104,7 +103,7 @@ router = APIRouter(prefix="/api/user", tags=["user"])
 
 @cbv(router)
 class CBV(AppView):
-    # Auto-injected: self.core, self.server_config, self.render, self.form_data
+    # Auto-injected: self.core, self.config, self.render, self.form_data
 
     @router.get("/{id}")
     async def get_user(self, id: ObjectId) -> User:
@@ -136,7 +135,6 @@ from mm_base6 import run
 
 await run(
     core=core,
-    server_config=server_config,
     jinja_config_cls=MyJinjaConfig,
     telegram_handlers=None,
     host="0.0.0.0",

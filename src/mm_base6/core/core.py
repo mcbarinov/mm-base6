@@ -9,10 +9,10 @@ from mm_concurrency.async_scheduler import AsyncScheduler
 from mm_mongo import AsyncDatabaseAny, AsyncMongoConnection
 from pymongo import AsyncMongoClient
 
+from mm_base6.config import Config
 from mm_base6.core.builtin_services import BuiltinServices
 from mm_base6.core.builtin_services.settings import BaseSettings
 from mm_base6.core.builtin_services.state import BaseState
-from mm_base6.core.config import CoreConfig
 from mm_base6.core.db import BaseDb
 from mm_base6.core.logger import configure_logging
 from mm_base6.core.service import create_services_from_registry, get_services
@@ -28,7 +28,7 @@ class CoreProtocol[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](Protocol):
     database, and service registry types while maintaining type safety.
     """
 
-    core_config: CoreConfig
+    config: Config
     settings: SC
     state: ST
     db: DB
@@ -60,7 +60,7 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
 
     Example:
         core = await Core.init(
-            core_config=CoreConfig(),
+            config=Config(),
             settings_cls=MySettings,
             state_cls=MyState,
             db_cls=MyDb,
@@ -68,7 +68,7 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
         )
     """
 
-    core_config: CoreConfig
+    config: Config
     scheduler: AsyncScheduler
     mongo_client: AsyncMongoClient[Any]
     database: AsyncDatabaseAny
@@ -84,7 +84,7 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
     @classmethod
     async def init(
         cls,
-        core_config: CoreConfig,
+        config: Config,
         settings_cls: type[SC],
         state_cls: type[ST],
         db_cls: type[DB],
@@ -97,7 +97,7 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
         This is the primary entry point for application initialization.
 
         Args:
-            core_config: Framework configuration (database URL, data directory, etc.)
+            config: Application configuration (database URL, data directory, HTTP settings, etc.)
             settings_cls: Application settings model extending BaseSettings
             state_cls: Application state model extending BaseState
             db_cls: Database class extending BaseDb with application collections
@@ -110,16 +110,16 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
             This method sets up logging, connects to MongoDB, initializes all
             framework services, loads persistent data, and injects dependencies.
         """
-        configure_logging(core_config.debug, core_config.data_dir)
+        configure_logging(config.debug, config.data_dir)
         inst = super().__new__(cls)
-        inst.core_config = core_config
+        inst.config = config
         inst.scheduler = AsyncScheduler()
-        conn = AsyncMongoConnection(inst.core_config.database_url)
+        conn = AsyncMongoConnection(inst.config.database_url)
         inst.mongo_client = conn.client
         inst.database = conn.database
         inst.db = await db_cls.init_collections(conn.database)
 
-        inst.builtin_services = BuiltinServices.init(inst.db, inst.scheduler, core_config)
+        inst.builtin_services = BuiltinServices.init(inst.db, inst.scheduler, config)
 
         inst.settings = await inst.builtin_services.settings.init_storage(inst.db.setting, settings_cls)
         inst.state = await inst.builtin_services.state.init_storage(inst.db.state, state_cls)
@@ -158,7 +158,7 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
             await service.on_start()
         await self.reinit_scheduler()
         logger.info("app started")
-        if not self.core_config.debug:
+        if not self.config.debug:
             await self.event("app_start")
 
     async def shutdown(self) -> None:
@@ -171,7 +171,7 @@ class Core[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR]:
         for service in reversed(get_services(self.services)):
             await service.on_stop()
         await self.scheduler.stop()
-        if not self.core_config.debug:
+        if not self.config.debug:
             await self.event("app_stop")
         await self.mongo_client.close()
         logger.info("app stopped")

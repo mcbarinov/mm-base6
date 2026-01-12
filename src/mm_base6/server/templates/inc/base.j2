@@ -6,7 +6,7 @@
   <meta name="viewport"
     content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>{{ core_config.app_name }}</title>
+  <title>{{ config.app_name }}</title>
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='%2348536b'/></svg>">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
@@ -19,9 +19,9 @@
 <body>
 
   <header style="display: flex; align-items: center; gap: 2rem;">
-    <h1>{{ core_config.app_name }}</h1>
+    <h1>{{ config.app_name }}</h1>
     <sl-button-group>
-      {% for path,title in server_config.main_menu.items() %}
+      {% for path,title in config.ui_menu.items() %}
       <sl-button href="{{path}}">{{title}}</sl-button>
       {% endfor %}
       <sl-button href="/system">
