@@ -13,7 +13,6 @@ COPY --from=uv_builder /uv /usr/local/bin/
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
-    UV_PYTHON=python3.13 \
     UV_PROJECT_ENVIRONMENT=/app
 
 # Create a virtual environment
