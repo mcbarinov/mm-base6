@@ -10,13 +10,18 @@ class Service[T]:
     to core without manual annotation in subclasses.
 
     Example:
+        from typing import override
+
         class MyService(Service[AppCore]):
+            @override
             async def on_start(self) -> None:
                 await self.core.db.my_collection.create_index("field")
 
+            @override
             def configure_scheduler(self) -> None:
                 self.core.scheduler.add_task("my_task", 60, self.my_task)
 
+            @override
             async def on_stop(self) -> None:
                 self._cache.clear()
     """

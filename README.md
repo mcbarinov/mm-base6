@@ -60,19 +60,23 @@ class Db(BaseDb):
 ```python
 # app/core/services/user.py
 from datetime import timedelta
+from typing import override
 
 from mm_mongo import utc_now
 from mm_base6 import Service
 
 class UserService(Service[AppCore]):
+    @override
     async def on_start(self):
         """Called during app startup."""
         await self.core.db.user.create_indexes()
 
+    @override
     async def on_stop(self):
         """Called during app shutdown."""
         pass
 
+    @override
     def configure_scheduler(self):
         """Register background tasks."""
         self.core.scheduler.add_task("cleanup", 3600, self.cleanup_old_users)

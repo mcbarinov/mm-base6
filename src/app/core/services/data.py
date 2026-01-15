@@ -1,5 +1,6 @@
 import logging
 import random
+from typing import override
 
 from bson import ObjectId
 from mm_http import http_request
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class DataService(Service[AppCore]):
+    @override
     def configure_scheduler(self) -> None:
         self.core.scheduler.add_task("generate_one", 60, self.generate_one)
 
