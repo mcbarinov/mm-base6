@@ -11,7 +11,7 @@ def data_status(status: DataStatus) -> Markup:
         color = "green"
     elif status == DataStatus.ERROR:
         color = "red"
-    return Markup(f"<span style='color: {color};'>{status.value}</span>")  # noqa: S704 # nosec
+    return Markup("<span style='color: {};'>{}</span>").format(color, status.value)
 
 
 class AppJinjaConfig(JinjaConfig[AppCore]):
@@ -21,10 +21,8 @@ class AppJinjaConfig(JinjaConfig[AppCore]):
 
     async def header(self) -> Markup:
         count = await self.core.db.data.count({})
-        info = f"<span style='color: red'>data: {count}</span>"
-        return Markup(info)  # noqa: S704 # nosec
+        return Markup("<span style='color: red'>data: {}</span>").format(count)
 
     async def footer(self) -> Markup:
         count = await self.core.db.data.count({})
-        info = f"data: {count}"
-        return Markup(info)  # noqa: S704 # nosec
+        return Markup("data: {}").format(count)
