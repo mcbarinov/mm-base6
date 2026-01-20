@@ -2,14 +2,13 @@
 {% block content %}
 
 <div class="page-header">
-  <h2>update state value / {{ key }}</h2>
+  <h2>update state value</h2>
+  <p>{{ key }}</p>
 </div>
 
 <form method="post" class="stack">
-  <sl-textarea name="value" rows="10" cols="30" value="{{ value }}"></sl-textarea>
-  <sl-button type="submit" variant="primary">update</sl-button>
+  <textarea name="value" rows="10" cols="30">{{ value }}</textarea>
+  <button type="submit">update</button>
 </form>
-
-
 
 {% endblock %}

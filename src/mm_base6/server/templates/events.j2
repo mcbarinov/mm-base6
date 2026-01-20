@@ -2,20 +2,21 @@
 {% block content %}
 <div class="page-header">
   <h2>events</h2>
-  <sl-divider vertical></sl-divider>
-  <form class="inline">
-    <sl-select name="type" placeholder="type" clearable value="{{ form.type }}">
+  <nav><button class="outline" onclick="openDialog('dialog-delete')">delete events</button></nav>
+  <form>
+    <select name="type">
+      <option value="">-- type --</option>
       {% for event_type in type_stats %}
-      <sl-option value="{{ event_type }}">{{ event_type }}</sl-option>
+      <option value="{{ event_type }}" {{ "selected" if form.type==event_type }}>{{ event_type }}</option>
       {% endfor %}
-    </sl-select>
-    <sl-input type="number" placeholder="limit" name="limit" value="{{ form.limit }}"></sl-input>
-    <sl-button type="submit">filter</sl-button>
+    </select>
+    <input type="number" placeholder="limit" name="limit" value="{{ form.limit }}">
+    <button type="submit" class="outline">filter</button>
   </form>
-  <sl-divider vertical></sl-divider>
-  <sl-button onclick="document.querySelector('#dialog-delete').show()">delete</sl-button>
-  <sl-dialog label="delete events" id="dialog-delete">
+</div>
 
+<dialog id="dialog-delete" label="delete events">
+  <article>
     <table>
       <tr>
         <th>type</th>
@@ -26,31 +27,30 @@
       <tr>
         <td>{{ event_type }}</td>
         <td>{{ count }}</td>
-        <td><sl-button href="/api-delete/system/events/type/{{ event_type }}" {{confirm}}>delete</sl-button></td>
+        <td><a href="/api-delete/system/events/type/{{ event_type }}" {{confirm}}>delete</a></td>
       </tr>
       {% endfor %}
     </table>
-
-    <p>all events / {{ all_count }} / <a href="/api-delete/system/events" {{ confirm }}>delete</a></p>
-
-  </sl-dialog>
-</div>
+    <p>all events / {{ all_count }} / <a href="/api-delete/system/events" {{ confirm }}>delete all</a></p>
+  </article>
+</dialog>
 
 <table>
   <tr>
     <th>created_at</th>
     <th>type</th>
     <th>data</th>
-    <th>delete</th>
-    <th>view</th>
+    <th>actions</th>
   </tr>
   {% for e in events %}
   <tr>
     <td>{{ e.created_at | dt }}</td>
     <td>{{ e.type }}</td>
     <td>{{ e.data | event_data_truncate }}</td>
-    <td><sl-button href="/api-delete/system/events/{{ e.id }}">delete</sl-button></td>
-    <td><sl-button href="/api/system/events/{{ e.id }}">view</sl-button></td>
+    <td>
+      <a href="/api-delete/system/events/{{ e.id }}">delete</a> ·
+      <a href="/api/system/events/{{ e.id }}">view</a>
+    </td>
   </tr>
   {% endfor %}
 </table>

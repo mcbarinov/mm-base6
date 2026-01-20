@@ -1,70 +1,87 @@
 @charset "UTF-8";
 
-:not(:defined) {
-    visibility: hidden;
+/* ==========================================================================
+   1. PICO CSS CUSTOMIZATION
+   Override Pico defaults for a compact admin UI.
+   Pico docs: https://picocss.com/docs/css-variables
+   ========================================================================== */
+
+/* Base font size - set directly on html to override Pico's responsive breakpoints */
+/* height: 100% enables sticky footer pattern */
+html {
+    font-size: 15px;
+    height: 100%;
 }
 
 body {
-    margin: 0;
-    padding: 10px 20px;
-    flex-direction: column;
-    align-items: center;
-    box-sizing: border-box;
-    font-family: var(--sl-font-sans);
-    font-size: var(--sl-font-size-medium);
-    line-height: var(--sl-line-height-normal);
-}
-
-header,
-footer,
-main {
-    width: 100%;
-
-}
-
-.stack {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    min-height: 100%;
 }
 
-.inline {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+main.container-fluid {
+    flex: 1;
 }
 
+/* Compact spacing variables */
+:root {
+    /* General spacing */
+    --pico-spacing: 0.75rem;
+    --pico-typography-spacing-vertical: 0.75rem;
+    --pico-block-spacing-vertical: 0.5rem;
+    --pico-block-spacing-horizontal: 0.75rem;
+
+    /* Form elements - smaller padding */
+    --pico-form-element-spacing-vertical: 0.4rem;
+    --pico-form-element-spacing-horizontal: 0.6rem;
+
+    /* Navigation - tighter spacing */
+    --pico-nav-element-spacing-vertical: 0.5rem;
+    --pico-nav-element-spacing-horizontal: 0.25rem;
+    --pico-nav-link-spacing-vertical: 0.25rem;
+    --pico-nav-link-spacing-horizontal: 0.5rem;
+
+    /* Typography */
+    --pico-line-height: 1.4;
+}
+
+/* Page padding and centering: centers when content narrower than viewport */
+.container-fluid {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Header with bottom border separator */
+header.container-fluid {
+    border-bottom: var(--pico-border-width) solid var(--pico-muted-border-color);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: var(--pico-spacing);
+}
+
+/* Override Pico's full-width table default */
 table {
-    width: 100%;
-    border-collapse: collapse;
+    width: auto;
 }
 
+/* Compact table cells */
 table th,
 table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--sl-color-neutral-200);
-    text-align: left;
+    padding: 0.35rem 0.5rem;
 }
 
-table th {
-    background-color: var(--sl-color-neutral-100);
-    color: var(--sl-color-neutral-700);
+/* Dropdown: auto width instead of Pico's default 100% */
+details.dropdown {
+    width: auto;
 }
 
-sl-menu-item a {
-    display: block;
-    width: 100%;
-    color: inherit;
-    text-decoration: none;
-}
-
-.page-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    height: 2rem;
-    padding-bottom: 2rem;
-}
+/* ==========================================================================
+   2. SORTABLE TABLES (sortable.js library)
+   Styling for sortable table headers with sort indicators
+   ========================================================================== */
 
 .sortable thead th:not(.no-sort) {
     cursor: pointer;
@@ -73,7 +90,7 @@ sl-menu-item a {
 .sortable thead th:not(.no-sort)::after,
 .sortable thead th:not(.no-sort)::before {
     transition: color 0.1s ease-in-out;
-    font-size: 1.2em;
+    font-size: 1.2em; /* em is correct here - scales with text; --pico-font-size is % and won't work */
     color: transparent;
 }
 
@@ -86,35 +103,128 @@ sl-menu-item a {
     color: inherit;
 }
 
-.sortable thead th:not(.no-sort)[aria-sort=descending]::after {
+.sortable thead th:not(.no-sort)[aria-sort="descending"]::after {
     color: inherit;
     content: "▾";
 }
 
-.sortable thead th:not(.no-sort)[aria-sort=ascending]::after {
+.sortable thead th:not(.no-sort)[aria-sort="ascending"]::after {
     color: inherit;
     content: "▴";
 }
 
-.sortable thead th:not(.no-sort).indicator-left::after {
-    content: "";
+/* ==========================================================================
+   3. CUSTOM APPLICATION STYLES
+   App-specific components using Pico variables for consistency
+   ========================================================================== */
+
+/* Layout utilities */
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pico-spacing);
 }
 
-.sortable thead th:not(.no-sort).indicator-left::before {
-    margin-right: 3px;
-    content: "▸";
+/* Page header: title + optional menu + optional form, all in one line */
+.page-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--pico-spacing);
+    margin-bottom: var(--pico-spacing);
 }
 
-.sortable thead th:not(.no-sort).indicator-left:hover::before {
-    color: inherit;
+.page-header h2 {
+    margin-bottom: 0;
 }
 
-.sortable thead th:not(.no-sort).indicator-left[aria-sort=descending]::before {
-    color: inherit;
-    content: "▾";
+.page-header nav {
+    display: flex;
+    gap: 0.75rem;
 }
 
-.sortable thead th:not(.no-sort).indicator-left[aria-sort=ascending]::before {
-    color: inherit;
-    content: "▴";
+.page-header nav a {
+    text-decoration: none;
+}
+
+.page-header nav a:hover {
+    text-decoration: underline;
+}
+
+.page-header fieldset {
+    margin-bottom: 0;
+}
+
+/* Flash message alerts */
+.alert {
+    padding: var(--pico-spacing);
+    margin-bottom: var(--pico-spacing);
+    border-radius: var(--pico-border-radius);
+    display: flex;
+    align-items: center;
+    gap: var(--pico-spacing);
+}
+
+.alert-danger {
+    background-color: color-mix(in srgb, var(--pico-del-color) 15%, transparent);
+    border-left: 3px solid var(--pico-del-color);
+}
+
+.alert-info {
+    background-color: color-mix(in srgb, var(--pico-ins-color) 15%, transparent);
+    border-left: 3px solid var(--pico-ins-color);
+}
+
+.alert-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0 0.5rem;
+    width: auto;
+}
+
+/* Page header forms - compact and visually grouped without requiring fieldset */
+.page-header form {
+    display: inline-flex;
+    width: auto;
+    margin-bottom: 0;
+}
+
+.page-header form > * {
+    margin-bottom: 0;
+}
+
+.page-header form > input {
+    width: 6rem;
+}
+
+.page-header form > select {
+    width: auto;
+}
+
+.page-header form > *:not(:first-child) {
+    margin-left: calc(var(--pico-border-width) * -1);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.page-header form > *:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.page-header form > *:first-child {
+    border-top-left-radius: 5rem;
+    border-bottom-left-radius: 5rem;
+}
+
+.page-header form > *:last-child {
+    border-top-right-radius: 5rem;
+    border-bottom-right-radius: 5rem;
+}
+
+.page-header form > *:focus {
+    z-index: 2;
 }

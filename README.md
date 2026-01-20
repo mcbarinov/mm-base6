@@ -163,3 +163,57 @@ Framework provides `/api/system/*` endpoints:
 - **MongoDB collections**: snake_case, singular (`user`, `data_item`)
 - **Service classes**: PascalCase + "Service" (`UserService`)
 - **Service registry**: snake_case, no suffix (`user`, `data`)
+
+## Admin UI CSS Guidelines
+
+The admin UI uses [Pico CSS](https://picocss.com/) as the base framework.
+
+### Principles
+
+1. **Pico-first** - Use Pico's semantic HTML patterns before writing custom CSS
+2. **Variables everywhere** - Always use `--pico-*` variables for colors, spacing, borders
+3. **Minimal custom CSS** - Only add custom styles when Pico doesn't provide a solution
+
+### File Structure (`base.css`)
+
+```
+1. PICO CSS CUSTOMIZATION - Override Pico variables and element defaults
+2. THIRD-PARTY LIBRARIES - Styles for external JS libraries (sortable.js, etc.)
+3. CUSTOM APPLICATION STYLES - App-specific components (.alert, .stack, etc.)
+```
+
+### Customizing Pico
+
+```css
+/* Override base font size (bypasses Pico's responsive breakpoints) */
+html {
+    font-size: 14px;
+}
+
+/* Override spacing via variables */
+:root {
+    --pico-spacing: 0.75rem;
+    --pico-form-element-spacing-vertical: 0.4rem;
+}
+```
+
+### Prefer Inline Styles for One-Off Cases
+
+For single-use elements, **inline styles are preferred** over adding to `base.css`:
+- The style applies to exactly one element in the entire app
+- Creating a CSS class adds unnecessary indirection
+- Keeps `base.css` clean — only reusable patterns belong there
+
+Example: `<nav style="justify-content: flex-start">` in header.
+
+### Pico Patterns to Use
+
+- `<fieldset role="group">` - horizontal form layout
+- `<small class="secondary">` - muted text
+- `class="outline"` - outline buttons
+- `class="container-fluid"` - full-width container
+
+### Reference
+
+- [Pico CSS Variables](https://picocss.com/docs/css-variables)
+- [Pico Components](https://picocss.com/docs)

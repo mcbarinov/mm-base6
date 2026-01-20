@@ -1,0 +1,44 @@
+{% extends "inc/base.j2" %}
+{% block content %}
+
+<div class="page-header">
+  <h2>Performance Test: HTML Dropdown ({{ rows | length }} rows)</h2>
+</div>
+
+<script>
+const startTime = performance.now();
+window.addEventListener('load', () => {
+  const endTime = performance.now();
+  document.getElementById('render-time').textContent = (endTime - startTime).toFixed(2) + ' ms';
+});
+</script>
+
+<p>Render time: <strong id="render-time">measuring...</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for i in rows %}
+    <tr>
+      <td>{{ i }}</td>
+      <td>
+        <details class="dropdown">
+          <summary>actions</summary>
+          <ul>
+            <li><a href="#">#{{ i }}: Menu 1</a></li>
+            <li><a href="#">#{{ i }}: Menu 2</a></li>
+            <li><a href="#">#{{ i }}: Menu 3</a></li>
+          </ul>
+        </details>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

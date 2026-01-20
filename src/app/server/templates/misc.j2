@@ -1,62 +1,102 @@
 {% extends "inc/base.j2" %}
 {% block content %}
 <div class="page-header">
-  <h2>mics</h2>
+  <h2>misc</h2>
 </div>
 
-
-
 <div style="display: flex; gap: 1rem;">
-  <sl-card>
-    <b>response classes</b>
+  <article>
+    <strong>response classes</strong>
     <ul>
       <li><a href="/api/misc/result-ok">/api/misc/result-ok</a></li>
       <li><a href="/api/misc/result-err">/api/misc/result-err</a></li>
     </ul>
-  </sl-card>
+  </article>
 
-  <sl-card>
-    <b>errors</b>
+  <article>
+    <strong>errors</strong>
     <ul>
       <li><a href="/api/misc/user-error">/api/misc/user-error</a></li>
       <li><a href="/api/misc/runtime-error">/api/misc/runtime-error</a></li>
     </ul>
-  </sl-card>
+  </article>
 
-  <sl-card>
-    <b>other</b>
+  <article>
+    <strong>other</strong>
     <ul>
-      <li><a href="/api-post/misc/update-dynamic-value">update dynamic value</a></li>
+      <li><a href="/api-post/misc/update-state-value">update state value</a></li>
+      <li><a href="/performance-dropdown-html">perf: dropdown html</a></li>
     </ul>
-  </sl-card>
+  </article>
 </div>
 
+<hr>
 
-<sl-divider></sl-divider>
+<div style="display: flex; gap: 1rem;">
+  <article>
+    <strong>empty filter</strong><br>
+    Zero: {{ zero | empty }}<br>
+  </article>
 
+  <article>
+    <form method="POST" action="/api/misc/upload" enctype="multipart/form-data">
+      <input type="file" name="file">
+      <button type="submit">upload</button>
+    </form>
+  </article>
 
+  <article>
+    <strong>counter</strong><br>
+    value: {{ counter }}<br>
+  </article>
 
-<sl-card>
-  <b>empty filter</b><br>
-  Zero: {{ zero | empty }}<br>
-</sl-card>
+</div>
 
-<sl-divider></sl-divider>
+<hr>
 
-<form method="POST" action="/api/misc/upload" enctype="multipart/form-data" class="inline">
+<div style="display: flex; gap: 1rem;">
+  <article>
+    <strong>modal dialogs</strong><br>
+    <button class="outline" onclick="openDialog('dialog-inline')">inline form</button>
+    <button class="outline" onclick="openDialog('dialog-stack')">stack form</button>
+    <button class="outline" onclick="openDialog('dialog-info')">info</button>
+    <dialog id="dialog-inline" label="inline form">
+      <article>
+        <form method="post" action="#">
+          <fieldset role="group">
+            <input type="text" name="query" placeholder="enter query">
+            <button type="submit">search</button>
+          </fieldset>
+        </form>
+      </article>
+    </dialog>
 
-  <sl-input type="file" name="file"></sl-input>
+    <dialog id="dialog-stack" label="stack form">
+      <article>
+        <form method="post" action="#" class="stack">
+          <input type="text" name="name" placeholder="name">
+          <input type="email" name="email" placeholder="email">
+          <input type="number" name="amount" placeholder="amount">
+          <textarea name="notes" rows="3" placeholder="notes"></textarea>
+          <button type="submit">submit</button>
+        </form>
+      </article>
+    </dialog>
 
-  <sl-button type="submit" variant="primary">upload</sl-button>
-  </fieldset>
-</form>
+    <dialog id="dialog-info" label="information">
+      <article>
+        <p>This is an informational modal with some text and useful links.</p>
+        <ul>
+          <li><a href="https://picocss.com/docs" target="_blank">Pico CSS documentation</a></li>
+          <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog" target="_blank">MDN: dialog
+              element</a></li>
+          <li><a href="https://jinja.palletsprojects.com/" target="_blank">Jinja documentation</a></li>
+        </ul>
+      </article>
+    </dialog>
 
+  </article>
+</div>
 
-<sl-divider></sl-divider>
-
-<sl-card>
-  <b>counter</b>
-  value: {{ counter }}<br>
-</sl-card>
 
 {% endblock %}

@@ -1,20 +1,24 @@
-# Claude Guidelines
+# AI Agent Start Guide
 
-## Critical Guidelines
+## Mandatory Rules (external)
+These files are REQUIRED. Read them fully and follow all rules.
+- `~/.claude/shared-rules/general.md`
+- `~/.claude/shared-rules/python.md`
 
-1. **Always communicate in English** - Regardless of the language the user speaks, always respond in English. All code, comments, and documentation must be in English.
+## Project Reading (context)
+These files are REQUIRED for project understanding.
+- `README.md` - Project overview and API
+- `ADR.md` - Architectural decisions and rationale
+- `DEVELOPMENT.md` - Project structure
 
-2. **Minimal documentation** - Only add comments/documentation when it simplifies understanding and isn't obvious from the code itself. Keep it strictly relevant and concise.
 
-3. **Critical thinking** - Always critically evaluate user ideas. Users can make mistakes. Think first about whether the user's idea is good before implementing.
+## Off-limits directories
+- `demo/src/` — auto-generated files. Never read or write.
 
-4. **Lint after changes** - After making code changes, always run `just lint` to verify code quality and fix any linter issues.
+## Preflight (mandatory)
+Before your first response:
+1. Read all files listed above.
+2. Do not answer until all are read.
+3. In your first reply, list every file you have read from this document.
 
-5. **No disabling linter rules** - Never use special disabling comments (like `# noqa`, `# type: ignore`, `# ruff: noqa`, etc.) to turn off linter rules without explicit permission. If you believe a rule should be disabled, ask first.
-
-## Required Reading
-
-Before working on this codebase, read these documents:
-1. `README.md` - Project overview and API
-2. `ADR.md` - Architectural decisions and rationale
-3. `DEVELOPMENT.md` - Project structure
+Failure to follow this protocol is considered an error.

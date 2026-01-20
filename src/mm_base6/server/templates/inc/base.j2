@@ -9,8 +9,7 @@
   <title>{{ config.app_name }}</title>
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='%2348536b'/></svg>">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
-  <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   <link rel="stylesheet" href="/assets/base.css">
   <script src="/assets/sortable.min.js"></script>
   <script src="/assets/base.js"></script>
@@ -18,61 +17,45 @@
 
 <body>
 
-  <header style="display: flex; align-items: center; gap: 2rem;">
-    <h1>{{ config.app_name }}</h1>
-    <sl-button-group>
-      {% for path,title in config.ui_menu.items() %}
-      <sl-button href="{{path}}">{{title}}</sl-button>
-      {% endfor %}
-      <sl-button href="/system">
-        <sl-icon slot="prefix" name="gear"></sl-icon>
-        system
-      </sl-button>
-    </sl-button-group>
-    {% if not header_info_new_line %}
-    <div>{{ header_info() }}</div>
-    {% endif %}
-    {% if header_info_new_line %}
-    <span>{{ header_info() }}</span>
+  <header class="container-fluid">
+    <nav style="justify-content: flex-start">
+      <ul style="gap: 0.75rem">
+        <li><strong style="font-size: 1.25rem">{{ config.app_name }}</strong></li>
+        {% if header_status() and header_status_inline %}
+        <li style="margin-left: 0.5rem">{{ header_status() }}</li>
+        {% endif %}
+        {% for path,title in config.ui_menu.items() %}
+        <li><a href="{{path}}">{{title}}</a></li>
+        {% endfor %}
+        <li><a href="/system">system</a></li>
+      </ul>
+    </nav>
+    {% if header_status() and not header_status_inline %}
+    <div>{{ header_status() }}</div>
     {% endif %}
   </header>
 
+  <main class="container-fluid">
+    {% for message in flash_messages %}
+    {% if message.error %}
+    <div class="alert alert-danger">
+      <span>&#9888; <strong>{{ message.message }}</strong></span>
+      <button class="alert-close" aria-label="Close">&times;</button>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <span>&#8505; <strong>{{ message.message }}</strong></span>
+      <button class="alert-close" aria-label="Close">&times;</button>
+    </div>
+    {% endif %}
+    {% endfor %}
 
-  <sl-divider></sl-divider>
-
-
-
-
-  {% for message in flash_messages %}
-
-  {% if message.error %}
-  <sl-alert variant="danger" open closable class="alert-closable">
-    <sl-icon slot="icon" name="exclamation-octagon"></sl-icon>
-    <strong>{{ message.message }}</strong>
-  </sl-alert>
-  {% else %}
-  <sl-alert variant="primary" open closable class="alert-closable">
-    <sl-icon slot="icon" name="info-circle"></sl-icon>
-    <strong>{{ message.message }}</strong>
-  </sl-alert>
-  {% endif%}
-
-  <sl-divider></sl-divider>
-  {% endfor %}
-
-
-  <main>
     {% block content -%}
     {%- endblock %}
   </main>
 
-
-  <sl-divider></sl-divider>
-
-  <footer>
-
-    app: v{{ app_version }}, mm-base6: v{{ mm_base6_version }} / server time: {{ utc_now() | dt }}<br>
-    {{ footer_info() }}
+  <footer class="container-fluid">
+    app: v{{ app_version }}, mm-base6: v{{ mm_base6_version }} / server time: {{ utc_now() | dt }} / <a href="/auth/logout">logout</a>
   </footer>
 
 </body>

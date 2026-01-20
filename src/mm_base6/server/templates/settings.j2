@@ -3,20 +3,22 @@
 
 <div class="page-header">
   <h2>settings</h2>
-  <sl-divider vertical></sl-divider>
-  <sl-button-group>
-    <sl-button href="/system/settings/toml">update</sl-button>
-    <sl-button href="/api/system/settings/toml">view</sl-button>
-  </sl-button-group>
+  <nav>
+    <a href="/system/settings/toml">update via toml</a>
+    <a href="/api/system/settings/toml">view toml</a>
+  </nav>
 </div>
 
 <form method="post">
   <table>
-    <tr>
-      <th>key</th>
-      <th>type</th>
-      <th>value</th>
-    </tr>
+    <thead>
+      <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>value</th>
+      </tr>
+    </thead>
+    <tbody>
     {% for key, value in info.settings.items() %}
     {% if key not in info.hidden %}
     <tr>
@@ -25,19 +27,20 @@
       <td>
         {% if info.types[key].value == "BOOLEAN" %}
         <input type="hidden" name="{{ key }}" value="false">
-        <sl-checkbox name="{{ key }}" {{ "checked" if value }} value="true">
-          {% elif info.types[key].value =="MULTILINE" %}
-          length: {{ info.settings[key] | length }} /
-          <sl-button href="/system/settings/multiline/{{ key }}">update</sl-button>
-          {% else %}
-          <sl-input name="{{ key }}" value="{{ value }}"></sl-input>
-          {% endif %}
+        <input type="checkbox" name="{{ key }}" {{ "checked" if value }} value="true">
+        {% elif info.types[key].value =="MULTILINE" %}
+        length: {{ info.settings[key] | length }} /
+        <a href="/system/settings/multiline/{{ key }}">update</a>
+        {% else %}
+        <input name="{{ key }}" value="{{ value }}">
+        {% endif %}
       </td>
     </tr>
     {% endif %}
     {% endfor %}
+    </tbody>
   </table>
-  <sl-divider></sl-divider>
-  <sl-button type="submit" variant="primary">save</sl-button>
+  <hr>
+  <button type="submit">save</button>
 </form>
 {% endblock %}

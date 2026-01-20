@@ -35,3 +35,8 @@ class UiRouter(AppView):
         await self.core.db.data.update_one({"_id": id}, {"$inc": {"value": value}})
         self.render.flash(f"Data {id} incremented by {value}")
         return redirect("/data")
+
+    @router.get("/performance-dropdown-html")
+    async def performance_dropdown_html(self) -> HTMLResponse:
+        rows = list(range(1000))
+        return await self.render.html("performance_dropdown_html.j2", rows=rows)

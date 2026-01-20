@@ -3,10 +3,7 @@
 
 <div class="page-header">
   <h2>state</h2>
-  <sl-divider vertical></sl-divider>
-  <sl-button-group>
-    <sl-button href="/api/system/state/toml">view</sl-button>
-  </sl-button-group>
+  <nav><a href="/api/system/state/toml">view toml</a></nav>
 </div>
 
 <table>
@@ -15,28 +12,22 @@
       <th>key</th>
       <th>value</th>
       <th>persistent</th>
-      <th>toml</th>
-      <th>update</th>
-      <th>view</th>
+      <th>actions</th>
     </tr>
   </thead>
   <tbody>
     {% for key, value in info.state.items() %}
     <tr>
       <td title="{{ info.descriptions[key] | escape }}">{{ key }}</td>
-      <td>
-        {{ value | string | truncate(119) }}
-      </td>
+      <td>{{ value | string | truncate(119) }}</td>
       <td>{{ info.persistent[key] | yes_no }}</td>
-      <td><sl-button href="/api/system/state/{{ key }}/toml">toml</sl-button></td>
-      <td><sl-button href="/system/state/{{ key }}">update</sl-button></td>
       <td>
-        <sl-button-group>
-          {% if info.persistent[key] %}
-          <sl-button href="/api/system/state/{{ key }}">db</sl-button>
-          {% endif %}
-          <sl-button href="/api/system/state/{{ key }}/value">value</sl-button>
-        </sl-button-group>
+        <a href="/api/system/state/{{ key }}/toml">toml</a> ·
+        <a href="/system/state/{{ key }}">update</a> ·
+        {% if info.persistent[key] %}
+        <a href="/api/system/state/{{ key }}">db</a> ·
+        {% endif %}
+        <a href="/api/system/state/{{ key }}/value">value</a>
       </td>
     </tr>
     {% endfor %}

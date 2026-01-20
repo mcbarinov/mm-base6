@@ -1,3 +1,5 @@
+from typing import override
+
 from markupsafe import Markup
 
 from app.core.db import DataStatus
@@ -17,12 +19,9 @@ def data_status(status: DataStatus) -> Markup:
 class AppJinjaConfig(JinjaConfig[AppCore]):
     filters = {"data_status": data_status}
     globals = {}
-    header_info_new_line = False
+    header_status_inline = True
 
-    async def header(self) -> Markup:
+    @override
+    async def header_status(self) -> Markup:
         count = await self.core.db.data.count({})
         return Markup("<span style='color: red'>data: {}</span>").format(count)
-
-    async def footer(self) -> Markup:
-        count = await self.core.db.data.count({})
-        return Markup("data: {}").format(count)

@@ -2,44 +2,37 @@
 {% block content %}
 <div class="page-header">
   <h2>system</h2>
-  <sl-divider vertical></sl-divider>
-  <sl-button href="/auth/logout" size="small">
-    <sl-icon slot="suffix" name="box-arrow-right"></sl-icon>
-    logout
-  </sl-button>
 </div>
 
-
 <div style="display: flex; gap: 5rem; flex-wrap: wrap;">
-  <sl-card>
+  <article>
     <table>
+      <tbody>
       <tr>
         <td>openapi</td>
         <td></td>
-        <td><sl-button href="/system/openapi">view</sl-button></td>
+        <td><a href="/system/openapi">view</a></td>
       </tr>
       <tr>
         <td>settings</td>
         <td></td>
-        <td><sl-button href="/system/settings">view</sl-button></td>
+        <td><a href="/system/settings">view</a></td>
       </tr>
       <tr>
         <td>state</td>
         <td></td>
-        <td><sl-button href="/system/state">view</sl-button></td>
+        <td><a href="/system/state">view</a></td>
       </tr>
       <tr>
         <td>events</td>
         <td>{{ stats.events }}</td>
-        <td><sl-button href="/system/events">view</sl-button></td>
+        <td><a href="/system/events">view</a></td>
       </tr>
       {% if telegram_message_settings %}
       <tr>
         <td>telegram message</td>
         <td></td>
-        <td>
-          <sl-button href="/api-post/system/telegram/send-test-message">test message</sl-button>
-        </td>
+        <td><a href="/api-post/system/telegram/send-test-message">test message</a></td>
       </tr>
       {% endif %}
       {% if telegram_bot_settings %}
@@ -47,10 +40,8 @@
         <td>telegram bot</td>
         <td>{{ "started" if telegram_bot.app is not none else "stopped" }}</td>
         <td>
-          <sl-button-group>
-            <sl-button href="/api-post/system/telegram/start-bot">start</sl-button>
-            <sl-button href="/api-post/system/telegram/shutdown-bot">shutdown</sl-button>
-          </sl-button-group>
+          <a href="/api-post/system/telegram/start-bot">start</a> ·
+          <a href="/api-post/system/telegram/shutdown-bot">shutdown</a>
         </td>
       </tr>
       {% endif %}
@@ -61,76 +52,74 @@
           {{ stats.scheduler.tasks | length }}
         </td>
         <td>
-          <sl-button-group>
-            <sl-button href="/api-post/system/scheduler/start">start</sl-button>
-            <sl-button href="/api-post/system/scheduler/stop">stop</sl-button>
-            <sl-button href="/api-post/system/scheduler/reinit">re-init</sl-button>
-          </sl-button-group>
+          <a href="/api-post/system/scheduler/start">start</a> ·
+          <a href="/api-post/system/scheduler/stop">stop</a> ·
+          <a href="/api-post/system/scheduler/reinit">re-init</a>
         </td>
       </tr>
       <tr>
         <td>system stats</td>
         <td></td>
-        <td><sl-button href="/api/system/stats">view</sl-button></td>
+        <td><a href="/api/system/stats">view</a></td>
       </tr>
       <tr>
         <td>logfile, app</td>
         <td>{{ stats.logfile_app | filesizeformat }}</td>
         <td>
-          <sl-button-group>
-            <sl-button href="/api/system/logfile/app">view</sl-button>
-            <sl-button href="/api-delete/system/logfile/app" {{ confirm }}>clean</sl-button>
-          </sl-button-group>
+          <a href="/api/system/logfile/app">view</a> ·
+          <a href="/api-delete/system/logfile/app" {{ confirm }}>clean</a>
         </td>
       </tr>
       <tr>
         <td>logfile, access</td>
         <td></td>
         <td>
-          <sl-button-group>
-            <sl-button href="/api/system/logfile/access">view</sl-button>
-            <sl-button href="/api-delete/system/logfile/access" {{ confirm }}>clean</sl-button>
-          </sl-button-group>
+          <a href="/api/system/logfile/access">view</a> ·
+          <a href="/api-delete/system/logfile/access" {{ confirm }}>clean</a>
         </td>
       </tr>
+      </tbody>
     </table>
-  </sl-card>
+  </article>
 
-  <sl-card class="card-header">
+  <article>
     <strong>mongodb collections / {{ stats.db | length }}</strong>
     <table>
+      <tbody>
       {% for k,v in stats.db.items() %}
       <tr>
         <td>{{ k }}</td>
         <td>{{ v }}</td>
       </tr>
       {% endfor %}
+      </tbody>
     </table>
 
-    <sl-divider></sl-divider>
+    <hr>
 
-    <sl-button-group>
-      <sl-button href="/api/system/mongo/profile">profiling status</sl-button>
-      <sl-button href="/api/system/mongo/slow">slow queries</sl-button>
-    </sl-button-group>
-  </sl-card>
-
-
-
+    <p>
+      <a href="/api/system/mongo/profile">profiling status</a> ·
+      <a href="/api/system/mongo/slow">slow queries</a>
+    </p>
+  </article>
 </div>
 
-<sl-divider></sl-divider>
+<hr>
 
-<sl-details summary="scheduler / {{ stats.scheduler.tasks | length }}">
+<details>
+  <summary>scheduler / {{ stats.scheduler.tasks | length }}</summary>
   <table>
-    <tr>
-      <th>task_id</th>
-      <th>interval</th>
-      <th>last_run</th>
-      <th>run_count</th>
-      <th>error_count</th>
-      <th>running</th>
-    </tr>
+    <thead>
+      <tr>
+        <th>task_id</th>
+        <th>interval</th>
+        <th>last_run</th>
+        <th>run_count</th>
+        <th>error_count</th>
+        <th>running</th>
+      </tr>
+    </thead>
+    <tbody>
     {% for t in stats.scheduler.tasks %}
     <tr>
       <td>{{ t.task_id }}</td>
@@ -141,12 +130,14 @@
       <td>{{ t.running | yes_no }}</td>
     </tr>
     {% endfor %}
+    </tbody>
   </table>
-</sl-details>
+</details>
 
-<sl-divider></sl-divider>
+<hr>
 
-<sl-details summary="async tasks / {{ stats.async_tasks | length }}">
+<details>
+  <summary>async tasks / {{ stats.async_tasks | length }}</summary>
   <table class="sortable">
     <thead>
       <tr>
@@ -156,6 +147,7 @@
         <th>running time, seconds</th>
       </tr>
     </thead>
+    <tbody>
     {% for t in stats.async_tasks %}
     <tr>
       <td>{{ t.name }}</td>
@@ -164,18 +156,23 @@
       <td> {% if t.running_time %}{{ t.running_time | round(2) }}{% endif %}</td>
     </tr>
     {% endfor %}
+    </tbody>
   </table>
-</sl-details>
+</details>
 
-<sl-divider></sl-divider>
+<hr>
 
-<sl-details summary="threads / {{ stats.threads | length }}">
+<details>
+  <summary>threads / {{ stats.threads | length }}</summary>
   <table>
-    <tr>
-      <th>name</th>
-      <th>daemon</th>
-      <th>func</th>
-    </tr>
+    <thead>
+      <tr>
+        <th>name</th>
+        <th>daemon</th>
+        <th>func</th>
+      </tr>
+    </thead>
+    <tbody>
     {% for t in stats.threads %}
     <tr>
       <td>{{ t.name }}</td>
@@ -183,7 +180,8 @@
       <td>{{ t.func_name | empty }}</td>
     </tr>
     {% endfor %}
+    </tbody>
   </table>
-</sl-details>
+</details>
 
 {% endblock %}

@@ -29,18 +29,19 @@ class JinjaConfig[T: "CoreProtocol[Any, Any, Any, Any]"]:
     """Base class for Jinja configuration."""
 
     filters: dict[str, Callable[..., Any]] = {}
+    """Custom Jinja filters to register in the template environment."""
+
     globals: dict[str, Any] = {}
-    header_info_new_line: bool = False
+    """Custom Jinja globals to register in the template environment."""
+
+    header_status_inline: bool = True
+    """If True, display header_status in the nav bar; if False, display it below the nav."""
 
     def __init__(self, core: T) -> None:
         self.core = core
 
-    async def header(self) -> Markup:
-        """Override to provide custom header info."""
-        return Markup("")
-
-    async def footer(self) -> Markup:
-        """Override to provide custom footer info."""
+    async def header_status(self) -> Markup:
+        """Return HTML to display in header. Override in subclass."""
         return Markup("")
 
 
@@ -57,9 +58,8 @@ def init_env[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
         "settings": core.settings,
         "state": core.state,
         "confirm": Markup(""" onclick="return confirm('sure?')" """),
-        "header_info": partial(jinja_config.header),
-        "footer_info": partial(jinja_config.footer),
-        "header_info_new_line": jinja_config.header_info_new_line,
+        "header_status": partial(jinja_config.header_status),
+        "header_status_inline": jinja_config.header_status_inline,
         "app_version": utils.get_package_version("app"),
         "mm_base6_version": utils.get_package_version("mm_base6"),
     }
