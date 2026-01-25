@@ -7,7 +7,7 @@
     <select name="type">
       <option value="">-- type --</option>
       {% for event_type in type_stats %}
-      <option value="{{ event_type }}" {{ "selected" if form.type==event_type }}>{{ event_type }}</option>
+      {{ option(event_type, form.type) }}
       {% endfor %}
     </select>
     <input type="number" placeholder="limit" name="limit" value="{{ form.limit }}">

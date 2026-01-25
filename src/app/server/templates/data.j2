@@ -11,7 +11,7 @@
     <select name="status">
       <option value="">status</option>
       {% for status in statuses %}
-      <option value="{{ status.value }}" {{ "selected" if form.status==status.value }}>{{ status.value }}</option>
+      {{ option(status.value, form.status) }}
       {% endfor %}
     </select>
     <input type="number" placeholder="limit" name="limit" value="{{ form.limit }}">

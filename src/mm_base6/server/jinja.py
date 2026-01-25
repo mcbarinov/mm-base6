@@ -17,12 +17,41 @@ from mm_base6.server import utils
 
 
 def event_data_truncate(data: object) -> str:
+    """Truncate event data JSON for display in the events list."""
     if not data:
         return ""
     res = json_dumps(data)
     if len(res) > 100:
         return res[:100] + "..."
     return res
+
+
+def option(value: object, current: object, label: object = None) -> Markup:
+    """
+    Generate an HTML <option> element with automatic selected attribute.
+
+    Simplifies rendering of <select> options by handling the selected state automatically.
+    Available as a global in all Jinja templates.
+
+    Args:
+        value: The option's value attribute.
+        current: The currently selected value to compare against.
+        label: Display text. If None, uses value.
+
+    Returns:
+        Markup: Safe HTML string like <option value="X" selected>Label</option>
+
+    Example:
+        <select name="status">
+          {{ option("", form.status, "Select...") }}
+          {% for s in statuses %}
+          {{ option(s.value, form.status) }}
+          {% endfor %}
+        </select>
+    """
+    selected = " selected" if value == current else ""
+    display = label if label is not None else value
+    return Markup('<option value="{}"{}>{}</option>').format(value, selected, display)
 
 
 class JinjaConfig[T: "CoreProtocol[Any, Any, Any, Any]"]:
@@ -58,6 +87,7 @@ def init_env[SC: BaseSettings, ST: BaseState, DB: BaseDb, SR](
         "settings": core.settings,
         "state": core.state,
         "confirm": Markup(""" onclick="return confirm('sure?')" """),
+        "option": option,
         "header_status": partial(jinja_config.header_status),
         "header_status_inline": jinja_config.header_status_inline,
         "app_version": utils.get_package_version("app"),
