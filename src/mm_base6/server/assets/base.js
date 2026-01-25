@@ -12,20 +12,12 @@ document.addEventListener('click', (e) => {
     }
 });
 
-/* Open modal dialog by id. Closes on backdrop click. */
-function openDialog(id) {
+/* Open dialog by id. Closes on backdrop click. */
+function dialog(id) {
     const dialog = document.getElementById(id);
     if (dialog) {
         dialog.showModal();
         dialog.onclick = (e) => { if (e.target === dialog) dialog.close(); };
-    }
-}
-
-/* Close the nearest parent dialog */
-function closeDialog(el) {
-    const dialog = el.closest('dialog');
-    if (dialog) {
-        dialog.close();
     }
 }
 

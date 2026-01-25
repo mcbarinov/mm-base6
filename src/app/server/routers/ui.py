@@ -3,6 +3,7 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Form
 from fastapi.params import Query
+from pydantic import BeforeValidator
 from starlette.responses import HTMLResponse, RedirectResponse
 
 from app.core.db import DataStatus
@@ -12,14 +13,24 @@ from mm_base6 import cbv, redirect
 router = APIRouter(include_in_schema=False)
 
 
+def empty_to_none(v: str | None) -> str | None:
+    if v == "":
+        return None
+    return v
+
+
 @cbv(router)
-class UiRouter(AppView):
+class PageRouter(AppView):
     @router.get("/")
     async def index(self) -> HTMLResponse:
         return await self.render.html("index.j2")
 
     @router.get("/data")
-    async def data(self, status: Annotated[str | None, Query()] = None, limit: Annotated[int, Query()] = 100) -> HTMLResponse:
+    async def data(
+        self,
+        status: Annotated[DataStatus | None, BeforeValidator(empty_to_none), Query()] = None,
+        limit: Annotated[int, Query()] = 100,
+    ) -> HTMLResponse:
         query = {"status": status} if status else {}
         data = await self.core.db.data.find(query, "-created_at", limit)
         statuses = list(DataStatus)
@@ -30,13 +41,16 @@ class UiRouter(AppView):
         counter = self.core.services.misc.counter.get()
         return await self.render.html("misc.j2", zero=0, counter=counter)
 
+    @router.get("/performance-dropdown-html")
+    async def performance_dropdown_html(self) -> HTMLResponse:
+        rows = list(range(1000))
+        return await self.render.html("performance_dropdown_html.j2", rows=rows)
+
+
+@cbv(router)
+class ActionRouter(AppView):
     @router.post("/data/{id}/inc")
     async def inc_data(self, id: ObjectId, value: Annotated[int, Form()]) -> RedirectResponse:
         await self.core.db.data.update_one({"_id": id}, {"$inc": {"value": value}})
         self.render.flash(f"Data {id} incremented by {value}")
         return redirect("/data")
-
-    @router.get("/performance-dropdown-html")
-    async def performance_dropdown_html(self) -> HTMLResponse:
-        rows = list(range(1000))
-        return await self.render.html("performance_dropdown_html.j2", rows=rows)

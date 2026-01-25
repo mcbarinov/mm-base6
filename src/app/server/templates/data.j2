@@ -36,7 +36,7 @@
       <td>{{ d.status | data_status }}</td>
       <td>{{ d.value | n }}</td>
       <td>
-        <button class="outline" onclick="openDialog('dialog-inc-{{d.id}}')">inc</button>
+        <button class="outline" onclick="dialog('dialog-inc-{{d.id}}')">inc</button>
         <dialog id="dialog-inc-{{d.id}}" label="inc data id={{d.id}}">
           <article>
             <form method="post" action="/data/{{ d.id }}/inc">
